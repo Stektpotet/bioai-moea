@@ -1,6 +1,6 @@
 package moea;
 
-import collections.ProblemImSeg;
+import moea.ProblemImSeg;
 import ga.data.Chromosome;
 
 import java.util.*;
@@ -14,7 +14,7 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
     private List<Set<Integer>> segments;
 
     public ChromoImSeg(ProblemImSeg image) {
-        this.genes = new EdgeOut[image.getLength()];
+        this.genes = new EdgeOut[image.getPixelCount()];
     }
 
     @Override
