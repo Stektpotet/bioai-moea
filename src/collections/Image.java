@@ -17,6 +17,10 @@ public class Image {
         }
     }
 
+    public int getPixelCount() {
+        return pixels.length;
+    }
+
     public int getHeight() {
         return height;
     }

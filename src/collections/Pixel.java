@@ -3,7 +3,7 @@ package collections;
 public class Pixel {
 
     private final byte[] rgb = new byte[3]; // for memory padding, this is optimal... I think
-    public Pixel(final byte red, final byte green, final byte blue) {
+    Pixel(final byte red, final byte green, final byte blue) {
         rgb[0] = red;
         rgb[1] = green;
         rgb[2] = blue;

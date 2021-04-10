@@ -9,7 +9,7 @@ public class ProblemImSeg {
     public ProblemImSeg(Image image) {
         this.image = image;
     }
-
+    public final int getPixelCount() { return image.getPixelCount(); }
     public final int getWith() {
         return image.getWidth();
     }
