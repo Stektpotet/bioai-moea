@@ -1,0 +1,6 @@
+#Ignore IntelliJ metadata
+.idea
+.iml
+
+out
+solutions
