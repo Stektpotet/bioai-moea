@@ -10,6 +10,10 @@ public class ImSegProblem {
         this.image = image;
     }
 
+    public final int getWith() {
+        return image.getWidth();
+    }
+
     public final Pixel getPixel(int flatIndex) {
         return image.getPixel(flatIndex);
     }
