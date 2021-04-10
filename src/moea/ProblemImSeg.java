@@ -3,10 +3,10 @@ package moea;
 import collections.Image;
 import collections.Pixel;
 
-public class ImSegProblem {
+public class ProblemImSeg {
     private final Image image;
 
-    public ImSegProblem(Image image) {
+    public ProblemImSeg(Image image) {
         this.image = image;
     }
 
