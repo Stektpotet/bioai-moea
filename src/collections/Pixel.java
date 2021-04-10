@@ -20,9 +20,9 @@ public class Pixel {
     }
 
     public double distance(Pixel other) {
-        int r = rgb[0] - other.rgb[0];
-        int g = rgb[1] - other.rgb[1];
-        int b = rgb[2] - other.rgb[2];
+        float r = (rgb[0] - other.rgb[0]) / 255F;
+        float g = (rgb[1] - other.rgb[1]) / 255F;
+        float b = (rgb[2] - other.rgb[2]) / 255F;
         return Math.sqrt(r*r + g*g + b*b);
     }
 }
