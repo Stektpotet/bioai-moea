@@ -2,11 +2,9 @@ package collections;
 
 public class Pixel {
 
-    private final byte[] rgb = new byte[3]; // for memory padding, this is optimal... I think
+    private final byte[] rgb; // for memory padding, this is optimal... I think
     Pixel(final byte red, final byte green, final byte blue) {
-        rgb[0] = red;
-        rgb[1] = green;
-        rgb[2] = blue;
+        rgb = new byte[]{red, green, blue};
     }
 
     public byte getRed() {
@@ -21,5 +19,10 @@ public class Pixel {
         return rgb[1];
     }
 
-    // TODO: put distance here?
+    public double distance(Pixel other) {
+        int r = rgb[0] - other.rgb[0];
+        int g = rgb[1] - other.rgb[1];
+        int b = rgb[2] - other.rgb[2];
+        return Math.sqrt(r*r + g*g + b*b);
+    }
 }
