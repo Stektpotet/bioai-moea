@@ -37,7 +37,10 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
         double edgeVal = UtilChromoImSeg.edgeValue(problemImSeg, phenotype);
         double connectivity = UtilChromoImSeg.connectivityMeasure(problemImSeg, phenotype);
 
-        return WEIGHT_OVDEV * overallDev + WEIGHT_EDGE * edgeVal + WEIGHT_CONNECT * connectivity;
+        // TODO: check / think about if a "-" is okay (we could instead normalize and subtract from one).
+        //          - fitness could then get negative - is that okay for selectors (simple GA) and NSGA-II?
+        //          - does logic of subtracting and minimizing work well together? (or: subtracting from one and weighting)
+        return WEIGHT_OVDEV * overallDev - WEIGHT_EDGE * edgeVal + WEIGHT_CONNECT * connectivity;
     }
 
     List<Set<Integer>> phenotype(ProblemImSeg image) throws Exception {
