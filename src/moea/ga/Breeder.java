@@ -33,7 +33,7 @@ public class Breeder implements Initializer<ProblemImSeg, PopulationImSeg, Chrom
         Graph graph = problem.getGraph();  // TODO: we could also consider moving the functionality from the Graph
         Image image = problem.getImage();  //       and Image class out into ProblemImSeg - more readability?
         int startingNode = RandomUtil.random.nextInt(problem.getPixelCount());
-        Set<Graph.Edge> open = new HashSet<>(graph.getAdjacent(startingNode));
+        Set<Graph.Edge> open = new HashSet<>();
         int node = startingNode;
         while (!open.isEmpty()) {
             var lowestCostEdge = open.stream().min(Comparator.comparingDouble(Graph.Edge::getCost)).get();

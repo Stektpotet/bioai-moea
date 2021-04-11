@@ -8,6 +8,15 @@ import java.util.stream.Stream;
 
 public class Graph {
 
+    private static final byte
+            UPPER_LEFT = 0,
+            UPPER = 1,
+            UPPER_RIGHT = 2,
+            LEFT = 3,
+            RIGHT = 4,
+            LOWER_LEFT = 5,
+            LOWER = 6,
+            LOWER_RIGHT = 7;
 
     public static class Edge {
         private final int fromIndex; // It's not that nice that we have to do this :/
@@ -41,29 +50,45 @@ public class Graph {
     //          - what do we then do with the non-existing neighbours of corner and edging pixels?
     //              - We set it to -1
 
-    private ArrayList<Edge>[] adjacencyList;
-//    private Edge[][] adjacencyList;
+//    private ArrayList<Edge>[] adjacencyList;
+    private Edge[][] adjacencyList;
 
-    public List<Edge> getAdjacent(int flatIndex) {
-        return Collections.unmodifiableList(adjacencyList[flatIndex]);
+    public Edge[] getAdjacent(int flatIndex) {
+        return adjacencyList[flatIndex];
     }
-    @SuppressWarnings("unchecked")
-    public Graph(Image img) {
-        adjacencyList = Stream.generate(() -> new ArrayList<Edge>(4)).limit(img.getPixelCount()).toArray(ArrayList[]::new);
 
+    /*
+    *   Neighbourhood layout
+    *   7   3   5
+    *   2   P   1
+    *   8   4   6
+    */
+
+    public Graph(Image img) {
+        adjacencyList = new Edge[img.getPixelCount()][8];
+        int[] mooresRelations = new int[]{
+                -img.getWidth() - 1, -img.getWidth(), -img.getWidth() + 1,
+                -1,                                   +1,
+                 img.getWidth() - 1,  img.getWidth(),  img.getWidth() + 1
+        };
+        Edge invalidEdge = new Edge(-1, -1, Double.POSITIVE_INFINITY);
         for (int i = 0; i < adjacencyList.length; i++) {
             Pixel p = img.getPixel(i);
-
             int ix = i % img.getWidth();
-            int iy = i / img.getWidth();
-            if (ix < img.getWidth() - 1)
-                adjacencyList[i].add(new Edge(i,i + 1, p.distance(img.getPixel(ix + 1, iy))));
-            if (ix > 0)
-                adjacencyList[i].add(new Edge(i,i - 1, p.distance(img.getPixel(ix - 1, iy))));
-            if (iy < img.getHeight() - 1)
-                adjacencyList[i].add(new Edge(i,i + img.getWidth(), p.distance(img.getPixel(ix, iy + 1))));
-            if (iy > 0)
-                adjacencyList[i].add(new Edge(i,i - img.getWidth(), p.distance(img.getPixel(ix, iy - 1))));
+
+            for (int j = 0; j < mooresRelations.length; j++) {
+                int neighbour = i + mooresRelations[j];
+                if (
+                    // Deal with neighbours outside along the vertical axis of the image
+                        neighbour < 0 || neighbour >= img.getPixelCount() ||
+                    // Deal with neighbours outside along the horizontal axis of the image
+                        (ix == 0 && (j == UPPER_LEFT || j == LEFT || j == LOWER_LEFT)) ||
+                                (ix == img.getWidth() - 1 && (j == UPPER_RIGHT || j == RIGHT || j == LOWER_RIGHT))
+                )
+                    adjacencyList[i][j] = invalidEdge;
+                else
+                    adjacencyList[i][j] = new Edge(i, neighbour, p.distance(img.getPixel(neighbour)));
+            }
         }
     }
 }
