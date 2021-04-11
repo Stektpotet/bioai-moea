@@ -1,8 +1,10 @@
 package moea;
 
+import collections.Graph;
 import ga.data.Chromosome;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 
 public class ChromoImSeg implements Chromosome<ProblemImSeg> {
@@ -23,24 +25,32 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
     }
 
     @Override
-    public double fitness(ProblemImSeg problemImSeg) throws Exception {
+    public double fitness(ProblemImSeg problem) throws Exception {
         if (phenoOutdated) {
-            phenotype(problemImSeg);
+            phenotype(problem);
             phenoOutdated = false;
             fitnessOutdated = true;
         }
-        if (!fitnessOutdated) {
-            return fitness;
+        if (fitnessOutdated) {
+            Function<Graph.Edge, Double> edgeValue = (edge) ->
+                    UtilChromoImSeg.inSameSegment(phenotype, edge.getFromIndex(), edge.getToIndex()) ? 0 : edge.getCost();
+            Function<Graph.Edge, Double> connectivity = (edge) ->
+                    UtilChromoImSeg.inSameSegment(phenotype, edge.getFromIndex(), edge.getToIndex()) ? 0 : 0.125;
+
+            // TODO: check / think about if a "-" is okay (we could instead normalize and subtract from one).
+            //          - fitness could then get negative - is that okay for selectors (simple GA) and NSGA-II?
+            //          - does logic of subtracting and minimizing work well together? (or: subtracting from one and weighting)
+            Function<Graph.Edge, Double> aggregateEVandCperEdge =
+                    (edge) -> - WEIGHT_EDGE * edgeValue.apply(edge) + WEIGHT_CONNECT * connectivity.apply(edge);
+
+            double weightedOverallDev = WEIGHT_OVDEV * UtilChromoImSeg.overallDeviation(problem, phenotype);
+            double weightedEdgeValueConnectivity = problem.sumMapOverEdges(aggregateEVandCperEdge);
+
+            fitness = weightedOverallDev + weightedEdgeValueConnectivity;
+            fitnessOutdated = false;
         }
 
-        double overallDev = UtilChromoImSeg.overallDeviation(problemImSeg, phenotype);
-        double edgeVal = UtilChromoImSeg.edgeValue(problemImSeg, phenotype);
-        double connectivity = UtilChromoImSeg.connectivityMeasure(problemImSeg, phenotype);
-
-        // TODO: check / think about if a "-" is okay (we could instead normalize and subtract from one).
-        //          - fitness could then get negative - is that okay for selectors (simple GA) and NSGA-II?
-        //          - does logic of subtracting and minimizing work well together? (or: subtracting from one and weighting)
-        return WEIGHT_OVDEV * overallDev - WEIGHT_EDGE * edgeVal + WEIGHT_CONNECT * connectivity;
+        return fitness;
     }
 
     List<Set<Integer>> phenotype(ProblemImSeg image) throws Exception {

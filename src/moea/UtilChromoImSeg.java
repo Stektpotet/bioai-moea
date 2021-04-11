@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -20,26 +23,6 @@ public class UtilChromoImSeg {
             overallDeviation += segmentDeviation;
         }
         return overallDeviation;
-    }
-
-    public static double edgeValue(final ProblemImSeg image, final List<Set<Integer>> segments) throws Exception {
-        double edgeValue = 0;
-        for (Integer pixelIdx : IntStream.range(0, image.getPixelCount())
-                                    .collect(ArrayList<Integer>::new, List::add, List::addAll)) {
-            double pixelEdgeValue = 0;
-            Graph.Edge[] neigborEdges = image.getEdgesToNeighbors(pixelIdx);
-            for (Graph.Edge neighborEdge : neigborEdges) {
-                // add 0 if in the same segment, distance otherwise
-                Integer neighborIdx = neighborEdge.getToIndex();
-                pixelEdgeValue += inSameSegment(segments, pixelIdx, neighborIdx) ? 0 : neighborEdge.getCost();
-            }
-            edgeValue += pixelEdgeValue;
-        }
-        return edgeValue;
-    }
-
-    public static double connectivityMeasure(final ProblemImSeg image, final List<Set<Integer>> segments) {
-        return 0;
     }
 
     private static Pixel centroid(final ProblemImSeg image, final Set<Integer> segment) {
@@ -60,8 +43,8 @@ public class UtilChromoImSeg {
         return new Pixel(red, green, blue);
     }
 
-    private static boolean inSameSegment(final List<Set<Integer>> segments,
-                                         final Integer x, final Integer y) throws Exception {
+    public static boolean inSameSegment(final List<Set<Integer>> segments,
+                                         final Integer x, final Integer y){
         for (Set<Integer> segment : segments) {
             if (segment.contains(x)) {
                 return segment.contains(y);
@@ -69,6 +52,9 @@ public class UtilChromoImSeg {
                 return false;
             }
         }
-        throw new Exception("Something is seriously wrong: segmentation does not contain x and y!");
+        System.out.println("This is really annoying and due to the fact that evaluation in Java isn't lazy, for" +
+                "understanding the problem see ChromoImSeg.fitness()");
+        return false;
+        // throw new Exception("Something is seriously wrong: segmentation does not contain x and y!");
     }
 }
