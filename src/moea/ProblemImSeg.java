@@ -18,6 +18,10 @@ public class ProblemImSeg {
         return image.getWidth();
     }
 
+    public Graph.Edge[] getEdgesToNeighbors(Integer pixelIdx) {
+        return null;
+    }
+
     public final Pixel getPixel(int flatIndex) {
         return image.getPixel(flatIndex);
     }
