@@ -1,6 +1,6 @@
 #Ignore IntelliJ metadata
 .idea
-.iml
+bioai-moea.iml
 
 out
 solutions
