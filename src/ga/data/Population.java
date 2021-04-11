@@ -15,6 +15,10 @@ public abstract class Population<ProblemT, C extends Chromosome<ProblemT>> {
         this.problem = problem;
     }
 
+    int getSize() {
+        return individuals.size();
+    }
+
     public List<C> getIndividuals() {
         return individuals;
     }
@@ -24,7 +28,7 @@ public abstract class Population<ProblemT, C extends Chromosome<ProblemT>> {
         C fittest = individuals.get(0);
         for (C c : individuals){
             double currentFitness = c.fitness(problem);
-            if (c.isFeasible(problem) && currentFitness < minFitness) {
+            if (currentFitness < minFitness) {
                 minFitness = currentFitness;
                 fittest = c;
             }

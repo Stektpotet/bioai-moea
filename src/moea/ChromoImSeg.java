@@ -91,10 +91,11 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
         }
     }
 
-    private enum EdgeOut {
+    public enum EdgeOut {
         RIGHT,
         LEFT,
         UP,
         DOWN,
+        NONE
     }
 }
