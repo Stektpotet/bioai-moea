@@ -8,22 +8,41 @@ import java.util.stream.IntStream;
 public class ChromoImSeg implements Chromosome<ProblemImSeg> {
 
     private EdgeOut[] genotype;
-    private boolean changed;
+    private boolean phenoOutdated;
     private List<Set<Integer>> phenotype;
+    private boolean fitnessOutdated;
+    private double fitness;
+
+    private static final double WEIGHT_OVDEV = 0.4;
+    private static final double WEIGHT_EDGE = 0.3;
+    private static final double WEIGHT_CONNECT = 0.3;
 
     public ChromoImSeg(ProblemImSeg image) {
         this.genotype = new EdgeOut[image.getPixelCount()];
-        this.changed = true;
+        this.phenoOutdated = true;
     }
 
     @Override
-    public double fitness(ProblemImSeg problemImSeg) {
-        return 0;
+    public double fitness(ProblemImSeg problemImSeg) throws Exception {
+        if (phenoOutdated) {
+            phenotype(problemImSeg);
+            phenoOutdated = false;
+            fitnessOutdated = true;
+        }
+        if (!fitnessOutdated) {
+            return fitness;
+        }
+
+        double overallDev = UtilChromoImSeg.overallDeviation(problemImSeg, phenotype);
+        double edgeVal = UtilChromoImSeg.edgeValue(problemImSeg, phenotype);
+        double connectivity = UtilChromoImSeg.connectivityMeasure(problemImSeg, phenotype);
+
+        return WEIGHT_OVDEV * overallDev + WEIGHT_EDGE * edgeVal + WEIGHT_CONNECT * connectivity;
     }
-    
+
     List<Set<Integer>> phenotype(ProblemImSeg image) throws Exception {
 
-        if (!changed) {
+        if (!phenoOutdated) {
             return phenotype;
         }
 
@@ -64,6 +83,9 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
             }
         }
         phenotype = segments;
+
+        phenoOutdated = false;
+        fitnessOutdated = true;
         return Collections.unmodifiableList(segments);
     }
 

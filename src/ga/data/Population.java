@@ -23,7 +23,7 @@ public abstract class Population<ProblemT, C extends Chromosome<ProblemT>> {
         return individuals;
     }
 
-    public C getOptimum() {
+    public C getOptimum() throws Exception {
         double minFitness = individuals.get(0).fitness(problem);
         C fittest = individuals.get(0);
         for (C c : individuals){
