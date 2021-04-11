@@ -8,7 +8,6 @@ import java.util.stream.IntStream;
 public class ChromoImSeg implements Chromosome<ProblemImSeg> {
 
     private EdgeOut[] genotype;
-    private List<Set<Integer>> segments;
     private boolean changed;
     private List<Set<Integer>> phenotype;
 
@@ -21,9 +20,8 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
     public double fitness(ProblemImSeg problemImSeg) {
         return 0;
     }
-
-    // TODO: does this ensure the immutability of the return value?
-    final List<Set<Integer>> phenotype(ProblemImSeg image) throws Exception {
+    
+    List<Set<Integer>> phenotype(ProblemImSeg image) throws Exception {
 
         if (!changed) {
             return phenotype;
