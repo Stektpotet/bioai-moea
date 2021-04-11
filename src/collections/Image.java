@@ -29,6 +29,10 @@ public class Image {
         return width;
     }
 
+    public double getDistance(int ia, int ib) {
+        return pixels[ia].distance(pixels[ib]);
+    }
+
     public final Pixel getPixel(int flatIndex) {
         return pixels[flatIndex];
     }
