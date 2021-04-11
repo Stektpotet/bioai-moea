@@ -19,8 +19,8 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
     private static final double WEIGHT_EDGE = 0.3;
     private static final double WEIGHT_CONNECT = 0.3;
 
-    public ChromoImSeg(ProblemImSeg image) {
-        this.genotype = new EdgeOut[image.getPixelCount()];
+    public ChromoImSeg(ProblemImSeg image, EdgeOut[] genotype) {
+        this.genotype = genotype;
         this.phenoOutdated = true;
     }
 
