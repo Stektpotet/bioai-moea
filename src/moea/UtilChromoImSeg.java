@@ -1,9 +1,14 @@
 package moea;
 
+import collections.Graph;
 import collections.Pixel;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class UtilChromoImSeg {
 
@@ -17,8 +22,20 @@ public class UtilChromoImSeg {
         return overallDeviation;
     }
 
-    public static double edgeValue(final ProblemImSeg image, final List<Set<Integer>> segments) {
-        return 0;
+    public static double edgeValue(final ProblemImSeg image, final List<Set<Integer>> segments) throws Exception {
+        double edgeValue = 0;
+        for (Integer pixelIdx : IntStream.range(0, image.getPixelCount())
+                                    .collect(ArrayList<Integer>::new, List::add, List::addAll)) {
+            double pixelEdgeValue = 0;
+            Graph.Edge[] neigborEdges = image.getEdgesToNeighbors(pixelIdx);
+            for (Graph.Edge neighborEdge : neigborEdges) {
+                // add 0 if in the same segment, distance otherwise
+                Integer neighborIdx = neighborEdge.getToIndex();
+                pixelEdgeValue += inSameSegment(segments, pixelIdx, neighborIdx) ? 0 : neighborEdge.getCost();
+            }
+            edgeValue += pixelEdgeValue;
+        }
+        return edgeValue;
     }
 
     public static double connectivityMeasure(final ProblemImSeg image, final List<Set<Integer>> segments) {
@@ -41,5 +58,17 @@ public class UtilChromoImSeg {
         blue /= segmentSize;
 
         return new Pixel(red, green, blue);
+    }
+
+    private static boolean inSameSegment(final List<Set<Integer>> segments,
+                                         final Integer x, final Integer y) throws Exception {
+        for (Set<Integer> segment : segments) {
+            if (segment.contains(x)) {
+                return segment.contains(y);
+            } else if (segment.contains(y)) {
+                return false;
+            }
+        }
+        throw new Exception("Something is seriously wrong: segmentation does not contain x and y!");
     }
 }
