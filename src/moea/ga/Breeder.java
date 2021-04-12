@@ -14,8 +14,6 @@ import java.util.stream.Stream;
 
 public class Breeder implements Initializer<ProblemImSeg, PopulationImSeg, ChromoImSeg> {
 
-    private final ProblemImSeg problem;
-
     private static final class Node {
         private final int pixelIndex;
         private Node parent;
@@ -52,8 +50,13 @@ public class Breeder implements Initializer<ProblemImSeg, PopulationImSeg, Chrom
         }
     }
 
-    public Breeder(ProblemImSeg problem) {
+    private final ProblemImSeg problem;
+    private final int minNumSegments, maxNumSegments;
+
+    public Breeder(ProblemImSeg problem, int minNumSegments, int maxNumSegments) {
         this.problem = problem;
+        this.minNumSegments = minNumSegments;
+        this.maxNumSegments = maxNumSegments;
     }
 
     @Override
@@ -68,9 +71,15 @@ public class Breeder implements Initializer<ProblemImSeg, PopulationImSeg, Chrom
 
         // 2. Make a MST out of the graph -> using prims algorithm, with a randomized starting point
         // TODO: Split the MST into several segments
+        var mst = mst(problem);
         // 3.
+        int numInitialSegments = minNumSegments + RandomUtil.random.nextInt(maxNumSegments - minNumSegments);
 
-        return new ChromoImSeg(problem, mst(problem));
+        RandomUtil.random.ints(0, mst.length).limit(numInitialSegments).forEach(i -> {
+            mst[i] = ChromoImSeg.EdgeOut.NONE;
+        });
+
+        return new ChromoImSeg(problem, mst);
     }
 
     private ChromoImSeg.EdgeOut[] mst(ProblemImSeg problem) {
