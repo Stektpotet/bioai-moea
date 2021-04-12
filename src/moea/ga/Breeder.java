@@ -18,7 +18,7 @@ public class Breeder implements Initializer<ProblemImSeg, PopulationImSeg, Chrom
 
     private static final class Node {
         private final int pixelIndex;
-        private final Node parent;
+        private Node parent;
         private final Set<Node> children = new HashSet<>();
 
         Node(int pixelIndex) {
@@ -47,6 +47,7 @@ public class Breeder implements Initializer<ProblemImSeg, PopulationImSeg, Chrom
             children.add(child);
         }
         boolean removeChild(Node child) {
+            child.parent = null;
             return children.remove(child);
         }
     }

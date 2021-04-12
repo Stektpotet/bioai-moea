@@ -24,6 +24,10 @@ public class Pixel {
         return rgb[1];
     }
 
+    public int packed() {
+        return (rgb[0] << 16) + (rgb[1] << 8) + rgb[2];
+    }
+
     public double distance(Pixel other) {
         float r = (rgb[0] - other.rgb[0]) / 255F;
         float g = (rgb[1] - other.rgb[1]) / 255F;
