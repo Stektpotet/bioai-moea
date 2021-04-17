@@ -19,18 +19,22 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
     private static final double WEIGHT_EDGE = 0.3;
     private static final double WEIGHT_CONNECT = 0.3;
 
-    public ChromoImSeg(ProblemImSeg image, EdgeOut[] genotype) {
+    public ChromoImSeg(EdgeOut[] genotype) {
         this.genotype = genotype;
         this.phenoOutdated = true;
-        try {
-            this.phenotype(image);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        this.fitnessOutdated = true;
     }
 
-    public List<Set<Integer>> getPhenotype() {
+    public List<Set<Integer>> getPhenotype (ProblemImSeg problem) throws Exception {
+        if (phenoOutdated) {
+            phenotype(problem);
+        }
         return phenotype;
+    }
+
+    public EdgeOut[] getGenotype() {
+        // TODO: find out how to make immutable
+        return genotype;
     }
 
     @Override

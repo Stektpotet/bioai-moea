@@ -79,7 +79,7 @@ public class Breeder implements Initializer<ProblemImSeg, PopulationImSeg, Chrom
             mst[i] = ChromoImSeg.EdgeOut.NONE;
         });
 
-        return new ChromoImSeg(problem, mst);
+        return new ChromoImSeg(mst);
     }
 
     private ChromoImSeg.EdgeOut[] mst(ProblemImSeg problem) {
@@ -135,9 +135,4 @@ public class Breeder implements Initializer<ProblemImSeg, PopulationImSeg, Chrom
             return ChromoImSeg.EdgeOut.DOWN;
         }
     }
-//    void traverseDepthFirst(Node n) {
-//        for (Node c : n.children) {
-//            traverseDepthFirst(c);
-//        }
-//    }
 }

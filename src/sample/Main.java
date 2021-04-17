@@ -34,7 +34,7 @@ public class Main extends Application {
             SCREEN_HEIGHT = (int)(1280/1.49689440994); // Aspect Ratio of image
 
     @Override
-    public void start(Stage primaryStage) throws FileNotFoundException {
+    public void start(Stage primaryStage) throws Exception {
         primaryStage.setTitle("MOEA Image Segmentation");
 //        Canvas canvas = new Canvas(SCREEN_WIDTH, SCREEN_HEIGHT);
         ImageView imgView = new ImageView();
@@ -57,7 +57,7 @@ public class Main extends Application {
 //            break;
 //        }
         ChromoImSeg c = pop.get(2);
-        List<Set<Integer>> segments = c.getPhenotype();
+        List<Set<Integer>> segments = c.getPhenotype(problem);
         int[] segmentColors = IntStream.generate(colorRand::nextInt).limit(segments.size()).toArray();
 
         Image problemImage = problem.getImage();
