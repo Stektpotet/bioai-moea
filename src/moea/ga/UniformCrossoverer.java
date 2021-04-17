@@ -10,6 +10,12 @@ import java.util.List;
 
 public class UniformCrossoverer implements Recombinator<ChromoImSeg> {
 
+    private final float pCrossover;
+
+    public UniformCrossoverer(float pCrossover) {
+        this.pCrossover = pCrossover;
+    }
+
     @Override
     public List<ChromoImSeg> recombine(List<ChromoImSeg> parents) throws Exception {
         if (parents.size() % 2 != 0) {
@@ -19,7 +25,14 @@ public class UniformCrossoverer implements Recombinator<ChromoImSeg> {
         Iterator<ChromoImSeg> parentsIter = parents.listIterator();
         List<ChromoImSeg> children = new ArrayList<>(parents.size());
         while (parentsIter.hasNext()) {
-            children.addAll(crossover(parentsIter.next(), parentsIter.next()));
+            ChromoImSeg mum = parentsIter.next();
+            ChromoImSeg dad = parentsIter.next();
+            if (RandomUtil.random.nextFloat() <= pCrossover) {
+                children.addAll(crossover(mum, dad));
+            } else {
+                children.add(mum);
+                children.add(dad);
+            }
         }
 
         return children;
