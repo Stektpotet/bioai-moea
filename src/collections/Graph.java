@@ -106,7 +106,7 @@ public class Graph {
                         neighbour < 0 || neighbour >= img.getPixelCount() ||
                     // Deal with neighbours outside along the horizontal axis of the image
                         (ix == 0 && (j == UPPER_LEFT || j == LEFT || j == LOWER_LEFT)) ||
-                                (ix == img.getWidth() - 1 && (j == UPPER_RIGHT || j == RIGHT || j == LOWER_RIGHT))
+                                (ix == (img.getWidth() - 1) && (j == UPPER_RIGHT || j == RIGHT || j == LOWER_RIGHT))
                 )
                     adjacencyList[i][j] = invalidEdge;
                 else

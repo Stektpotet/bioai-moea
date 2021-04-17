@@ -126,12 +126,13 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
                 return pointsTo < 0 ? pixelIdx : pointsTo;
             case DOWN:
                 pointsTo = pixelIdx + width;
-                return pointsTo > genotype.length ? pixelIdx : pointsTo;
+                return pointsTo >= genotype.length ? pixelIdx : pointsTo;
             case RIGHT:
-                return pixelIdx % width == 0 ? pixelIdx : pixelIdx + 1;
+                pointsTo = pixelIdx + 1;
+                return pointsTo % width == 0 ? pixelIdx : pointsTo;
             case LEFT:
                 pointsTo = pixelIdx - 1;
-                return pointsTo % width == 0 ? pixelIdx : pointsTo;
+                return pixelIdx % width == 0 ? pixelIdx : pointsTo;
             default:
                 return pixelIdx;
         }
