@@ -1,32 +1,25 @@
 package ga.data;
 
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * @param <C> Chromosome
  */
-public abstract class Population<ProblemT, C extends Chromosome<ProblemT>> {
-    protected List<C> individuals;
+public abstract class Population<ProblemT, C extends Chromosome<ProblemT>> extends ArrayList<C> {
     protected ProblemT problem;
 
     public Population(ProblemT problem, List<C> individuals) {
-        this.individuals = individuals;
+        this.addAll(individuals);
         this.problem = problem;
     }
 
-    int getSize() {
-        return individuals.size();
-    }
-
-    public List<C> getIndividuals() {
-        return individuals;
-    }
-
     public C getOptimum() throws Exception {
-        double minFitness = individuals.get(0).fitness(problem);
-        C fittest = individuals.get(0);
-        for (C c : individuals){
+        double minFitness = get(0).fitness(problem);
+        C fittest = get(0);
+        for (C c : this){
             double currentFitness = c.fitness(problem);
             if (currentFitness < minFitness) {
                 minFitness = currentFitness;

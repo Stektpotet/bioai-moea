@@ -19,9 +19,18 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
     private static final double WEIGHT_EDGE = 0.3;
     private static final double WEIGHT_CONNECT = 0.3;
 
-    public ChromoImSeg(ProblemImSeg image) {
-        this.genotype = new EdgeOut[image.getPixelCount()];
+    public ChromoImSeg(ProblemImSeg image, EdgeOut[] genotype) {
+        this.genotype = genotype;
         this.phenoOutdated = true;
+        try {
+            this.phenotype(image);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public List<Set<Integer>> getPhenotype() {
+        return phenotype;
     }
 
     @Override
@@ -74,10 +83,14 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
                 predecessor = element;
                 element = pointsTo(image, predecessor);
 
+                // Check if the segment does not already contain contain the element pointed to
                 if (!currentSegment.add(element)) {
                     segments.add(currentSegment);
                     break;
-                } else if (unvisited.remove(element)) {
+                }
+                // Otherwise, check if the pointed to element can be removed from unvisited,
+                // if it cannot, then it is already in another segment
+                else if (!unvisited.remove(element)) {
                     boolean terriblyWrong = true;
                     for (Set<Integer> segment : segments) {
                         if (segment.contains(element)) {

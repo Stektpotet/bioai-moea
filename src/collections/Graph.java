@@ -1,24 +1,21 @@
 package collections;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Stream;
+import java.util.*;
 
 
 public class Graph {
 
     private static final byte
             UPPER_LEFT = 0,
-            UPPER = 1,
+            UP = 1,
             UPPER_RIGHT = 2,
             LEFT = 3,
             RIGHT = 4,
             LOWER_LEFT = 5,
-            LOWER = 6,
+            DOWN = 6,
             LOWER_RIGHT = 7;
 
-    public static class Edge {
+    public static class Edge implements Comparable<Edge> {
         private final int fromIndex; // It's not that nice that we have to do this :/
         private final int toIndex;
         private final double cost;
@@ -27,6 +24,25 @@ public class Graph {
             this.fromIndex = fromIndex;
             this.toIndex = toIndex;
             this.cost = cost;
+        }
+
+        public Edge flip() {
+            return new Edge(toIndex, fromIndex, cost);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Edge edge = (Edge) o;
+            return ((this.toIndex == edge.toIndex && this.fromIndex == edge.fromIndex) ||
+                    (this.fromIndex == edge.toIndex && this.toIndex == edge.fromIndex)) &&
+                            Double.compare(edge.cost, cost) == 0;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(fromIndex, toIndex, cost);
         }
 
         public int getFromIndex() {
@@ -40,9 +56,21 @@ public class Graph {
         public double getCost() {
             return cost;
         }
+
+        @Override
+        public int compareTo(Edge o) {
+            int comparison = Double.compare(this.cost, o.cost);
+            if (comparison == 0) {
+                if ((this.toIndex == o.toIndex && this.fromIndex == o.fromIndex) ||
+                        (this.fromIndex == o.toIndex && this.toIndex == o.fromIndex))
+                    return 0;
+                return 1;
+            }
+            return comparison;
+        }
     }
 
-    // TODO: this should really hold one adjacency-list of based on moore-neighbourhoods
+    //       this should really hold one adjacency-list of based on moore-neighbourhoods
     //       but also a way of accessing only the cardinal neighbours
     //       DISCUSS:
     //          Should the adjacency list be Edge[][] instead?
@@ -50,20 +78,15 @@ public class Graph {
     //          - what do we then do with the non-existing neighbours of corner and edging pixels?
     //              - We set it to -1
 
-//    private ArrayList<Edge>[] adjacencyList;
     private Edge[][] adjacencyList;
 
-    public Edge[] getAdjacent(int flatIndex) {
-        return adjacencyList[flatIndex];
+    public List<Edge> getAdjacent(int flatIndex) {
+        return List.of(adjacencyList[flatIndex]);
     }
-
-    /*
-    *   Neighbourhood layout
-    *   7   3   5
-    *   2   P   1
-    *   8   4   6
-    */
-
+    public List<Edge> getCardinals(int flatIndex) {
+        Edge[] moores = adjacencyList[flatIndex];
+        return List.of(moores[UP], moores[LEFT], moores[RIGHT], moores[DOWN]);
+    }
     public Graph(Image img) {
         adjacencyList = new Edge[img.getPixelCount()][8];
         int[] mooresRelations = new int[]{
