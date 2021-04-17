@@ -1,6 +1,8 @@
 package ga.data;
 
 
+import moea.ProblemImSeg;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,5 +29,9 @@ public abstract class Population<ProblemT, C extends Chromosome<ProblemT>> exten
             }
         }
         return fittest;
+    }
+
+    public ProblemT getProblem() {
+        return problem;
     }
 }

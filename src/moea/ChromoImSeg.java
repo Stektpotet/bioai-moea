@@ -38,7 +38,7 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
     }
 
     @Override
-    public double fitness(ProblemImSeg problem) throws Exception {
+    public double fitness(ProblemImSeg problem) {
         if (phenoOutdated) {
             phenotype(problem);
             phenoOutdated = false;
@@ -66,7 +66,7 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
         return fitness;
     }
 
-    List<Set<Integer>> phenotype(ProblemImSeg image) throws Exception {
+    List<Set<Integer>> phenotype(ProblemImSeg image) {
 
         if (!phenoOutdated) {
             return phenotype;
@@ -104,7 +104,7 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
                         }
                     }
                     if (terriblyWrong) {
-                        throw new Exception("Element was in visited, but not in any segment!");
+                        System.out.println("Something is terribly wrong");
                     }
                     break;
                 } else {

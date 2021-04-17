@@ -3,10 +3,7 @@ package moea;
 import collections.Graph;
 import collections.Pixel;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -23,6 +20,10 @@ public class UtilChromoImSeg {
             overallDeviation += segmentDeviation;
         }
         return overallDeviation;
+    }
+
+    public static Comparator<ChromoImSeg> chromosomeFitnessComparator(ProblemImSeg problem) {
+        return (a, b) -> (int) Math.signum(a.fitness(problem) - b.fitness(problem));
     }
 
     private static Pixel centroid(final ProblemImSeg image, final Set<Integer> segment) {
