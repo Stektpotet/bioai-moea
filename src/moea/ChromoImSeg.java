@@ -1,10 +1,11 @@
 package moea;
 
 import collections.Graph;
+import collections.Image;
+import collections.Pixel;
 import ga.data.Chromosome;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.IntStream;
 
 public class ChromoImSeg implements Chromosome<ProblemImSeg> {
@@ -15,9 +16,9 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
     private boolean fitnessOutdated;
     private double fitness;
 
-    private static final double WEIGHT_OVDEV = 0.4;
-    private static final double WEIGHT_EDGE = 0.3;
-    private static final double WEIGHT_CONNECT = 0.3;
+    private static final double WEIGHT_OVDEV = 0.0;
+    private static final double WEIGHT_EDGE = 0.0;
+    private static final double WEIGHT_CONNECT = 1.0;
 
     public ChromoImSeg(EdgeOut[] genotype) {
         this.genotype = genotype;
@@ -45,26 +46,61 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
             fitnessOutdated = true;
         }
         if (fitnessOutdated) {
-            Function<Graph.Edge, Double> edgeValue = (edge) ->
-                    UtilChromoImSeg.inSameSegment(phenotype, edge.getFromIndex(), edge.getToIndex()) ? 0 : edge.getCost();
-            Function<Graph.Edge, Double> connectivity = (edge) ->
-                    UtilChromoImSeg.inSameSegment(phenotype, edge.getFromIndex(), edge.getToIndex()) ? 0 : 0.125;
+            double sum = 0;
+            Image image = problem.getImage();
+            Graph graph = problem.getGraph();
+            for (Set<Integer> segment : phenotype) {
+                Pixel centroid = UtilChromoImSeg.centroid(image, segment);
+                for (Integer pixelIndex : segment) {
+                    // calculate edge value and connectivy (same control flow)
+                    sum += graph.streamValidNeighbours(pixelIndex).mapToDouble(e -> edgeOrConnectivity(segment, e)).sum();
 
-            // TODO: check / think about if a "-" is okay (we could instead normalize and subtract from one).
-            //          - fitness could then get negative - is that okay for selectors (simple GA) and NSGA-II?
-            //          - does logic of subtracting and minimizing work well together? (or: subtracting from one and weighting)
-            Function<Graph.Edge, Double> aggregateEVandCperEdge =
-                    (edge) -> - WEIGHT_EDGE * edgeValue.apply(edge) + WEIGHT_CONNECT * connectivity.apply(edge);
+                    // calculate overall deviation
+                    sum += WEIGHT_OVDEV * image.getPixel(pixelIndex).distance(centroid);
+                }
 
-            double weightedOverallDev = WEIGHT_OVDEV * UtilChromoImSeg.overallDeviation(problem, phenotype);
-            double weightedEdgeValueConnectivity = problem.sumMapOverEdges(aggregateEVandCperEdge);
-
-            fitness = weightedOverallDev + weightedEdgeValueConnectivity;
+            }
+            fitness = sum;
             fitnessOutdated = false;
         }
-
         return fitness;
     }
+
+    private double edgeOrConnectivity(Set<Integer> segment, Graph.Edge e) {
+        if (segment.contains(e.getToIndex())) {
+            return WEIGHT_CONNECT * e.getCost();
+        }
+        return - WEIGHT_EDGE * 0.125;
+    }
+
+//    @Override
+//    public double fitness(ProblemImSeg problem) {
+//        if (phenoOutdated) {
+//            phenotype(problem);
+//            phenoOutdated = false;
+//            fitnessOutdated = true;
+//        }
+//        if (fitnessOutdated) {
+//            Function<Graph.Edge, Double> edgeValue = (edge) ->
+//                    UtilChromoImSeg.inSameSegment(phenotype, edge.getFromIndex(), edge.getToIndex()) ? 0 : edge.getCost();
+//            Function<Graph.Edge, Double> connectivity = (edge) ->
+//                    UtilChromoImSeg.inSameSegment(phenotype, edge.getFromIndex(), edge.getToIndex()) ? 0 : 0.125;
+//
+//            // TODO: check / think about if a "-" is okay (we could instead normalize and subtract from one).
+//            //          - fitness could then get negative - is that okay for selectors (simple GA) and NSGA-II?
+//            //          - does logic of subtracting and minimizing work well together? (or: subtracting from one and weighting)
+//            Function<Graph.Edge, Double> aggregateEVandCperEdge =
+//                    (edge) -> - WEIGHT_EDGE * edgeValue.apply(edge) + WEIGHT_CONNECT * connectivity.apply(edge);
+//
+//            double weightedOverallDev = WEIGHT_OVDEV * UtilChromoImSeg.overallDeviation(problem.getImage(), phenotype);
+//            double weightedEdgeValueConnectivity = problem.sumMapOverEdges(aggregateEVandCperEdge);
+//
+//            fitness = weightedOverallDev + weightedEdgeValueConnectivity;
+//            fitnessOutdated = false;
+//        }
+//
+//        return fitness;
+//    }
 
     List<Set<Integer>> phenotype(ProblemImSeg image) {
 
@@ -119,7 +155,7 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
         return Collections.unmodifiableList(segments);
     }
 
-    private Integer pointsTo(ProblemImSeg image, Integer pixelIdx) {
+    private int pointsTo(ProblemImSeg image, int pixelIdx) {
         EdgeOut direction = genotype[pixelIdx];
         int width = image.getWith();
 

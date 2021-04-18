@@ -1,6 +1,7 @@
 package moea;
 
 import collections.Graph;
+import collections.Image;
 import collections.Pixel;
 
 import java.util.*;
@@ -12,7 +13,7 @@ import java.util.stream.IntStream;
 
 public class UtilChromoImSeg {
 
-    public static double overallDeviation(final ProblemImSeg image, final List<Set<Integer>> segments) {
+    public static double overallDeviation(final Image image, final List<Set<Integer>> segments) {
         double overallDeviation = 0;
         for (Set<Integer> segment : segments) {
             Pixel centroid = centroid(image, segment);
@@ -26,7 +27,7 @@ public class UtilChromoImSeg {
         return (a, b) -> (int) Math.signum(a.fitness(problem) - b.fitness(problem));
     }
 
-    private static Pixel centroid(final ProblemImSeg image, final Set<Integer> segment) {
+    static Pixel centroid(final Image image, final Set<Integer> segment) {
         int red = 0;
         int green = 0;
         int blue = 0;

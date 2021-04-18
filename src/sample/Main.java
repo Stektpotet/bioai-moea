@@ -56,7 +56,7 @@ public class Main extends Application {
         MutatorImSeg mutator = new MutatorImSeg(0.1f);
         GenerationSwapReplacement survivorSelector = new GenerationSwapReplacement(problem);
 
-        for (int i = 0; i < 40; i++) {
+        for (int i = 0; i < 5; i++) {
             System.out.println("Doing generation: " + i);
             var parents = parentSelector.select(pop);
             var offspring = mutator.mutateAll(crossoverer.recombine(parents));

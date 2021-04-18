@@ -1,6 +1,7 @@
 package collections;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 
 public class Graph {
@@ -87,8 +88,8 @@ public class Graph {
     public List<Edge> getAdjacent(int flatIndex) {
         return List.of(adjacencyList[flatIndex]); // returns an unmodifiable list
     }
-    public List<Edge> getAdjacentValid(int flatIndex) {
-        return getAdjacent(flatIndex); // returns an unmodifiable list
+    public Stream<Edge> streamValidNeighbours(int flatIndex) {
+        return Arrays.stream(adjacencyList[flatIndex]).filter(Edge::valid);
     }
 
     public List<Edge> getCardinals(int flatIndex) {
