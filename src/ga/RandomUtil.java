@@ -1,5 +1,7 @@
 package ga;
 
+import moea.ChromoImSeg;
+
 import java.util.*;
 
 public final class RandomUtil {
@@ -37,5 +39,9 @@ public final class RandomUtil {
         List<T> chosen = new ArrayList<>(list);
         Collections.shuffle(chosen, random);
         return chosen.subList(0, n);
+    }
+
+    public static <T> T randomChoice(T[] arr) {
+        return arr[random.nextInt(arr.length)];
     }
 }

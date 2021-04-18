@@ -45,14 +45,22 @@ public class UtilChromoImSeg {
     }
 
     public static boolean inSameSegment(final List<Set<Integer>> segments,
-                                         final Integer x, final Integer y){
+                                         final Integer x, final Integer y) {
         for (Set<Integer> segment : segments) {
-            if (segment.contains(x)) {
-                return segment.contains(y);
-            } else if (segment.contains(y)) {
+            boolean containsY = segment.contains(y);
+            if (segment.contains(x))
+                return containsY;
+            if (containsY)
                 return false;
-            }
         }
+
+//        for (Set<Integer> segment : segments) {
+//            if (segment.contains(x)) {
+//                return segment.contains(y);
+//            } else if (segment.contains(y)) {
+//                return false;
+//            }
+//        }
         System.out.println("This is really annoying and due to the fact that evaluation in Java isn't lazy, for" +
                 "understanding the problem see ChromoImSeg.fitness()");
         return false;

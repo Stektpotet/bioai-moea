@@ -4,10 +4,7 @@ import collections.Graph;
 import collections.Image;
 import collections.Pixel;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Function;
-import java.util.stream.IntStream;
 
 public class ProblemImSeg {
     private final Graph graph;
@@ -21,10 +18,6 @@ public class ProblemImSeg {
     public final int getPixelCount() { return image.getPixelCount(); }
     public final int getWith() {
         return image.getWidth();
-    }
-
-    public Graph.Edge[] getEdgesToNeighbors(Integer pixelIdx) {
-        return null;
     }
 
     public final Pixel getPixel(int flatIndex) {
@@ -41,14 +34,13 @@ public class ProblemImSeg {
 
     public double sumMapOverEdges(final Function<Graph.Edge, Double> function) {
         double sum = 0;
-        for (Integer pixelIdx : IntStream.range(0, this.getPixelCount())
-                .collect(ArrayList<Integer>::new, List::add, List::addAll)) {
-            double pixelSum = 0;
-            Graph.Edge[] neigborEdges = this.getEdgesToNeighbors(pixelIdx);
-            for (Graph.Edge neighborEdge : neigborEdges) {
-                pixelSum += function.apply(neighborEdge);
+
+        for (int i = 0; i < this.getPixelCount(); i++) {
+            for (var neighbourEdge : graph.getAdjacent(i)) {
+                if (!neighbourEdge.valid())
+                    continue;
+                sum += function.apply(neighbourEdge);
             }
-            sum += pixelSum;
         }
         return sum;
     }

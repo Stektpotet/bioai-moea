@@ -9,7 +9,7 @@ import java.util.stream.IntStream;
 
 public class ChromoImSeg implements Chromosome<ProblemImSeg> {
 
-    private EdgeOut[] genotype;
+    private final EdgeOut[] genotype;
     private boolean phenoOutdated;
     private List<Set<Integer>> phenotype;
     private boolean fitnessOutdated;
@@ -34,7 +34,7 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
 
     public EdgeOut[] getGenotype() {
         // TODO: find out how to make immutable
-        return genotype;
+        return genotype.clone();
     }
 
     @Override

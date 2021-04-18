@@ -30,6 +30,10 @@ public class Graph {
             return new Edge(toIndex, fromIndex, cost);
         }
 
+        public boolean valid() {
+            return fromIndex != -1;
+        }
+
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
@@ -81,8 +85,12 @@ public class Graph {
     private Edge[][] adjacencyList;
 
     public List<Edge> getAdjacent(int flatIndex) {
-        return List.of(adjacencyList[flatIndex]);
+        return List.of(adjacencyList[flatIndex]); // returns an unmodifiable list
     }
+    public List<Edge> getAdjacentValid(int flatIndex) {
+        return getAdjacent(flatIndex); // returns an unmodifiable list
+    }
+
     public List<Edge> getCardinals(int flatIndex) {
         Edge[] moores = adjacencyList[flatIndex];
         return List.of(moores[UP], moores[LEFT], moores[RIGHT], moores[DOWN]);

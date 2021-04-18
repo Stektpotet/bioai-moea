@@ -17,7 +17,7 @@ public class GeneticAlgorithmRunner<ProblemT, Pop extends Population<ProblemT, C
 
     private Initializer<ProblemT, Pop, C> initializer;
     private Recombinator<C> recombinator;
-    private Mutator<ProblemT, Pop, C> mutator;
+    private Mutator<ProblemT, C> mutator;
     private ParentSelector<ProblemT, C> parentSelector;
     private SurvivorSelector<ProblemT, Pop, C> survivorSelector;
     private final int populationSize;
@@ -25,7 +25,7 @@ public class GeneticAlgorithmRunner<ProblemT, Pop extends Population<ProblemT, C
 
     public GeneticAlgorithmRunner(Initializer<ProblemT, Pop, C> initializer,
                             Recombinator<C> recombinator,
-                            Mutator<ProblemT, Pop, C> mutator,
+                            Mutator<ProblemT, C> mutator,
                             ParentSelector<ProblemT, C> parentSelector,
                             SurvivorSelector<ProblemT, Pop, C> survivorSelector, int populationSize, int numGenerations) {
         this.initializer = initializer;
@@ -46,7 +46,7 @@ public class GeneticAlgorithmRunner<ProblemT, Pop extends Population<ProblemT, C
                 var generationCounter = IntStream.iterate(0, i -> i + 1).iterator();
                 for (;true;) {
                     List<C> parents = parentSelector.select(pop);
-                    List<C> offspring = mutator.mutateAll(pop, recombinator.recombine(parents));
+                    List<C> offspring = mutator.mutateAll(recombinator.recombine(parents));
                     pop = survivorSelector.select(pop, parents, offspring);
                     C optimum = pop.getOptimum();
                     updateValue(new GeneticAlgorithmSnapshot<>(generationCounter.next(), optimum));

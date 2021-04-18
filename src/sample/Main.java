@@ -15,8 +15,7 @@ import javafx.stage.Stage;
 import moea.ChromoImSeg;
 import moea.ImSegFiles;
 import moea.ProblemImSeg;
-import moea.ga.Breeder;
-import moea.ga.PopulationImSeg;
+import moea.ga.*;
 import moea.visual.ImSegVisualizer;
 
 import java.io.FileInputStream;
@@ -50,13 +49,23 @@ public class Main extends Application {
 
         ProblemImSeg problem = ImSegFiles.ReadImSegProblem("./res/training_images/86016/Test image.jpg");
         var breeder = new Breeder(problem, 4, 50);
-        PopulationImSeg pop = breeder.breed(4);
+        PopulationImSeg pop = breeder.breed(50);
+
+        TournamentSelection parentSelector = new TournamentSelection(10, 4);
+        UniformCrossoverer crossoverer = new UniformCrossoverer(0.5f);
+        MutatorImSeg mutator = new MutatorImSeg(0.1f);
+        GenerationSwapReplacement survivorSelector = new GenerationSwapReplacement(problem);
+
+        for (int i = 0; i < 40; i++) {
+            System.out.println("Doing generation: " + i);
+            var parents = parentSelector.select(pop);
+            var offspring = mutator.mutateAll(crossoverer.recombine(parents));
+            pop = survivorSelector.select(pop, parents, offspring);
+        }
+        ChromoImSeg c = pop.getOptimum();
+
         Random colorRand = new Random(69);
-//        for (ChromoImSeg c : pop) {
-//
-//            break;
-//        }
-        ChromoImSeg c = pop.get(2);
+//        ChromoImSeg c = pop.get(2);
         List<Set<Integer>> segments = c.getPhenotype(problem);
         int[] segmentColors = IntStream.generate(colorRand::nextInt).limit(segments.size()).toArray();
 
