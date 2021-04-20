@@ -41,7 +41,7 @@ public class Segment {
             }
         }
         for (int i = 0; i < 3; i++) {
-            avgColor[i] /= img.getPixelCount();
+            avgColor[i] /= all.size();
         }
         centroid = new Pixel(avgColor[0], avgColor[1], avgColor[2]);
     }
