@@ -1,8 +1,7 @@
 package moea;
 
-import collections.Graph;
-import collections.Image;
-import collections.Pixel;
+import collections.*;
+import ga.RandomUtil;
 import ga.data.Chromosome;
 
 import java.util.*;
@@ -12,12 +11,12 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
 
     private final EdgeOut[] genotype;
     private boolean phenoOutdated;
-    private List<Set<Integer>> phenotype;
+    private List<Segment> phenotype;
     private boolean fitnessOutdated;
     private double fitness;
 
-    private static final double WEIGHT_OVDEV = 0.0;
-    private static final double WEIGHT_EDGE = 0.0;
+    private static final double WEIGHT_OVDEV = 0.4;
+    private static final double WEIGHT_EDGE = 0.1;
     private static final double WEIGHT_CONNECT = 1.0;
 
     public ChromoImSeg(EdgeOut[] genotype) {
@@ -26,7 +25,7 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
         this.fitnessOutdated = true;
     }
 
-    public List<Set<Integer>> getPhenotype (ProblemImSeg problem) throws Exception {
+    public List<Segment> getPhenotype (ProblemImSeg problem) throws Exception {
         if (phenoOutdated) {
             phenotype(problem);
         }
@@ -42,23 +41,45 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
     public double fitness(ProblemImSeg problem) {
         if (phenoOutdated) {
             phenotype(problem);
-            phenoOutdated = false;
             fitnessOutdated = true;
         }
         if (fitnessOutdated) {
-            double sum = 0;
             Image image = problem.getImage();
             Graph graph = problem.getGraph();
-            for (Set<Integer> segment : phenotype) {
-                Pixel centroid = UtilChromoImSeg.centroid(image, segment);
-                for (Integer pixelIndex : segment) {
-                    // calculate edge value and connectivy (same control flow)
-                    sum += graph.streamValidNeighbours(pixelIndex).mapToDouble(e -> edgeOrConnectivity(segment, e)).sum();
+            double sum = 0.0;
+//            double sum = phenotype.parallelStream().mapToDouble(s -> {
+//                double segSum = 0.0;
+//                Pixel centroid = UtilChromoImSeg.centroid(image, s);
+//                for (Integer pixelIndex : s) {
+//                    // calculate edge value and connectivy (same control flow)
+//                    segSum += graph.streamValidNeighbours(pixelIndex).mapToDouble(e -> edgeOrConnectivity(s, e)).sum();
+//
+//                    // calculate overall deviation
+//                    segSum += WEIGHT_OVDEV * image.getPixel(pixelIndex).distance(centroid);
+//                }
+//                return segSum;
+//            }).sum();
 
-                    // calculate overall deviation
-                    sum += WEIGHT_OVDEV * image.getPixel(pixelIndex).distance(centroid);
+            for (Segment segment : phenotype) {
+//                Set<Integer> all = segment.getAll();
+//                for (Integer pixelIndex : all) {
+//                    // calculate edge value and connectivy (same control flow)
+//                    for (Graph.Edge neighbour : graph.getCardinals(pixelIndex)) {
+//                        sum += edgeOrConnectivity(all, neighbour);
+//                    }
+//                    // calculate overall deviation
+//                    sum += WEIGHT_OVDEV * image.getPixel(pixelIndex).distance(segment.getCentroid());
+//                }
+                for (Integer pid : segment.getNonEdge()) {
+                    for (Graph.Edge neighbour : graph.getCardinals(pid)) {
+                        sum += WEIGHT_CONNECT * neighbour.getCost();
+                    }
+                    sum += WEIGHT_OVDEV * image.getPixel(pid).distance(segment.getCentroid());
                 }
-
+                for (Integer pid : segment.getEdge()) {
+                    sum -= WEIGHT_EDGE * 0.125;
+                    sum += WEIGHT_OVDEV * image.getPixel(pid).distance(segment.getCentroid());
+                }
             }
             fitness = sum;
             fitnessOutdated = false;
@@ -102,17 +123,18 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
 //        return fitness;
 //    }
 
-    List<Set<Integer>> phenotype(ProblemImSeg image) {
+    List<Segment> phenotype(ProblemImSeg image) {
 
         if (!phenoOutdated) {
             return phenotype;
         }
 
-        Set<Integer> unvisited = IntStream.range(0, genotype.length).collect(HashSet::new, Set::add, Set::addAll);
-        List<Set<Integer>> segments = new ArrayList<>();
+        RandomSet<Integer> unvisited = IntStream.range(0, genotype.length).collect(RandomSet::new, RandomSet::add, RandomSet::addAll);
+//        List<Segment> segments = new ArrayList<>();
+        List<Set<Integer>> segmentation = new ArrayList<>();
 
         while (!unvisited.isEmpty()) {
-            Integer element = unvisited.stream().findAny().get();
+            Integer element = unvisited.pollRandom(RandomUtil.random);
             unvisited.remove(element);
 
             Set<Integer> currentSegment = new HashSet<>();
@@ -125,14 +147,14 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
 
                 // Check if the segment does not already contain contain the element pointed to
                 if (!currentSegment.add(element)) {
-                    segments.add(currentSegment);
+                    segmentation.add(currentSegment);
                     break;
                 }
                 // Otherwise, check if the pointed to element can be removed from unvisited,
                 // if it cannot, then it is already in another segment
                 else if (!unvisited.remove(element)) {
                     boolean terriblyWrong = true;
-                    for (Set<Integer> segment : segments) {
+                    for (Set<Integer> segment : segmentation) {
                         if (segment.contains(element)) {
                             segment.addAll(currentSegment);
                             terriblyWrong = false;
@@ -148,11 +170,14 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
                 }
             }
         }
-        phenotype = segments;
 
+
+        phenotype = Collections.unmodifiableList(
+                segmentation.stream().map(s -> new Segment(s, image.getImage())).toList()
+        );
         phenoOutdated = false;
         fitnessOutdated = true;
-        return Collections.unmodifiableList(segments);
+        return phenotype;
     }
 
     private int pointsTo(ProblemImSeg image, int pixelIdx) {

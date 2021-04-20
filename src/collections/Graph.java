@@ -8,13 +8,13 @@ public class Graph {
 
     private static final byte
             UPPER_LEFT = 0,
-            UP = 1,
-            UPPER_RIGHT = 2,
-            LEFT = 3,
-            RIGHT = 4,
-            LOWER_LEFT = 5,
-            DOWN = 6,
-            LOWER_RIGHT = 7;
+            UPPER_RIGHT = 1,
+            LOWER_LEFT = 2,
+            LOWER_RIGHT = 3,
+            UP = 0,
+            LEFT = 1,
+            RIGHT = 2,
+            DOWN = 3;
 
     public static class Edge implements Comparable<Edge> {
         private final int fromIndex; // It's not that nice that we have to do this :/
@@ -83,44 +83,79 @@ public class Graph {
     //          - what do we then do with the non-existing neighbours of corner and edging pixels?
     //              - We set it to -1
 
-    private Edge[][] adjacencyList;
+    private List<List<Edge>> adjacencyList;
+    private List<List<Edge>> cardinalAdjacencyList;
 
     public List<Edge> getAdjacent(int flatIndex) {
-        return List.of(adjacencyList[flatIndex]); // returns an unmodifiable list
-    }
-    public Stream<Edge> streamValidNeighbours(int flatIndex) {
-        return Arrays.stream(adjacencyList[flatIndex]).filter(Edge::valid);
+        return Collections.unmodifiableList(adjacencyList.get(flatIndex)); // returns an unmodifiable list
     }
 
     public List<Edge> getCardinals(int flatIndex) {
-        Edge[] moores = adjacencyList[flatIndex];
-        return List.of(moores[UP], moores[LEFT], moores[RIGHT], moores[DOWN]);
+        return Collections.unmodifiableList(cardinalAdjacencyList.get(flatIndex));
     }
     public Graph(Image img) {
-        adjacencyList = new Edge[img.getPixelCount()][8];
-        int[] mooresRelations = new int[]{
-                -img.getWidth() - 1, -img.getWidth(), -img.getWidth() + 1,
-                -1,                                   +1,
-                 img.getWidth() - 1,  img.getWidth(),  img.getWidth() + 1
+        adjacencyList = new ArrayList<>(img.getPixelCount());
+        cardinalAdjacencyList = new ArrayList<>(img.getPixelCount());
+
+        int[] corners = new int[]{
+                -img.getWidth() - 1, -img.getWidth() + 1,
+                 img.getWidth() - 1,  img.getWidth() + 1
         };
-        Edge invalidEdge = new Edge(-1, -1, Double.POSITIVE_INFINITY);
-        for (int i = 0; i < adjacencyList.length; i++) {
+        int[] cardinals = new int[]{
+                -img.getWidth(), -1, +1, img.getWidth()
+        };
+
+        for (int i = 0; i < img.getPixelCount(); i++) {
             Pixel p = img.getPixel(i);
             int ix = i % img.getWidth();
-
-            for (int j = 0; j < mooresRelations.length; j++) {
-                int neighbour = i + mooresRelations[j];
-                if (
-                    // Deal with neighbours outside along the vertical axis of the image
-                        neighbour < 0 || neighbour >= img.getPixelCount() ||
-                    // Deal with neighbours outside along the horizontal axis of the image
-                        (ix == 0 && (j == UPPER_LEFT || j == LEFT || j == LOWER_LEFT)) ||
-                                (ix == (img.getWidth() - 1) && (j == UPPER_RIGHT || j == RIGHT || j == LOWER_RIGHT))
-                )
-                    adjacencyList[i][j] = invalidEdge;
-                else
-                    adjacencyList[i][j] = new Edge(i, neighbour, p.distance(img.getPixel(neighbour)));
+            List<Edge> neighbours = new ArrayList<>(8);
+            List<Edge> cardinalNeighbours = new ArrayList<>(4);
+            { // CARDINALS
+                int neighbour = i + cardinals[UP];
+                if (neighbour >= 0) {
+                    Edge e = new Edge(i, neighbour, p.distance(img.getPixel(neighbour)));
+                    neighbours.add(e);
+                    cardinalNeighbours.add(e);
+                }
+                neighbour = i + cardinals[LEFT];
+                if (Math.floorMod(neighbour, img.getWidth()) != (img.getWidth() - 1)) {
+                    Edge e = new Edge(i, neighbour, p.distance(img.getPixel(neighbour)));
+                    neighbours.add(e);
+                    cardinalNeighbours.add(e);
+                }
+                neighbour = i + cardinals[RIGHT];
+                if (neighbour % img.getWidth() != 0) {
+                    Edge e = new Edge(i, neighbour, p.distance(img.getPixel(neighbour)));
+                    neighbours.add(e);
+                    cardinalNeighbours.add(e);
+                }
+                neighbour = i + cardinals[DOWN];
+                if (neighbour < img.getPixelCount()) {
+                    Edge e = new Edge(i, neighbour, p.distance(img.getPixel(neighbour)));
+                    neighbours.add(e);
+                    cardinalNeighbours.add(e);
+                }
             }
+            { // CORNERS
+                int neighbour = i + corners[UPPER_LEFT];
+                if (neighbour >= 0) {
+                    neighbours.add(new Edge(i, neighbour, p.distance(img.getPixel(neighbour))));
+                }
+                neighbour = i + corners[UPPER_RIGHT];
+                if (neighbour >= 0) {
+                    neighbours.add(new Edge(i, neighbour, p.distance(img.getPixel(neighbour))));
+                }
+                neighbour = i + corners[LOWER_LEFT];
+                if (neighbour < img.getPixelCount()) {
+                    neighbours.add(new Edge(i, neighbour, p.distance(img.getPixel(neighbour))));
+                }
+                neighbour = i + corners[LOWER_RIGHT];
+                if (neighbour < img.getPixelCount()) {
+                    neighbours.add(new Edge(i, neighbour, p.distance(img.getPixel(neighbour))));
+                }
+            }
+            adjacencyList.add(neighbours);
+            cardinalAdjacencyList.add(cardinalNeighbours);
         }
     }
 }

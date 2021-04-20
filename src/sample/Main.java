@@ -1,6 +1,7 @@
 package sample;
 
 import collections.Image;
+import collections.Segment;
 import ga.RandomUtil;
 import javafx.application.Application;
 import javafx.geometry.Rectangle2D;
@@ -53,10 +54,10 @@ public class Main extends Application {
 
         TournamentSelection parentSelector = new TournamentSelection(10, 4);
         UniformCrossoverer crossoverer = new UniformCrossoverer(0.5f);
-        MutatorImSeg mutator = new MutatorImSeg(0.1f);
-        GenerationSwapReplacement survivorSelector = new GenerationSwapReplacement(problem);
+        MutatorImSeg mutator = new MutatorImSeg(0.01f);
+        MyPlusLambdaReplacement survivorSelector = new MyPlusLambdaReplacement(problem);
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 100; i++) {
             System.out.println("Doing generation: " + i);
             var parents = parentSelector.select(pop);
             var offspring = mutator.mutateAll(crossoverer.recombine(parents));
@@ -66,7 +67,7 @@ public class Main extends Application {
 
         Random colorRand = new Random(69);
 //        ChromoImSeg c = pop.get(2);
-        List<Set<Integer>> segments = c.getPhenotype(problem);
+        List<Segment> segments = c.getPhenotype(problem);
         int[] segmentColors = IntStream.generate(colorRand::nextInt).limit(segments.size()).toArray();
 
         Image problemImage = problem.getImage();
@@ -76,9 +77,13 @@ public class Main extends Application {
 
         System.out.println(segments.size());
         for (int i = 0; i < segments.size(); i++) {
-            for (var p : segments.get(i)) { // for all pixels in a segment
+            Segment segment = segments.get(i);
+            for (var p : segment.getEdge()) {
+                segmentImgRaw[p] = 0x0000ff00;
+            }
+            for (var p : segment.getNonEdge()) { // for all pixels in a segment
                 if (p >= problemImage.getPixelCount())
-                    continue;
+                    continue; // TODO: Does this ever happen?
                 segmentImgRaw[p] = segmentColors[i];
             }
         }

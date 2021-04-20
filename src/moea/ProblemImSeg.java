@@ -48,19 +48,19 @@ public class ProblemImSeg {
         return sum;
     }
 
-
-    public double segmentationSummation(final List<Set<Integer>> segments, final Function<Graph.Edge, Double> fun) {
-        double sum = 0;
-        for (var segment : segments) {
-            for (var pixelIndex : segment) {
-                sum += graph.streamValidNeighbours(pixelIndex).mapToDouble(e -> 0.0).sum();
-            }
-        }
-        // TODO: make it so we iterate through the segments one by one instead,
-        //       then we don't need to find whether a segment holds both pixels,
-        //       we just check if the neighbouring pixel is in the same one!
-        return sum;
-    }
+//
+//    public double segmentationSummation(final List<Set<Integer>> segments, final Function<Graph.Edge, Double> fun) {
+//        double sum = 0;
+//        for (var segment : segments) {
+//            for (var pixelIndex : segment) {
+//                sum += graph.streamValidNeighbours(pixelIndex).mapToDouble(e -> 0.0).sum();
+//            }
+//        }
+//        // TODO: make it so we iterate through the segments one by one instead,
+//        //       then we don't need to find whether a segment holds both pixels,
+//        //       we just check if the neighbouring pixel is in the same one!
+//        return sum;
+//    }
 }
 
 // fun(inSameSegment, pixelDistance)
