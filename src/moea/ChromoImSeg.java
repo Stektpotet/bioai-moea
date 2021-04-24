@@ -20,6 +20,11 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
 
         @Override
         public int compareTo(Fitness o) {
+            if (this.connectivity <= o.connectivity && this.edge >= o.edge && this.deviation <= o.deviation) {
+                return 1;
+            } else if ((this.connectivity >= o.connectivity && this.edge <= o.edge && this.deviation >= o.deviation)) {
+                return -1;
+            }
             return 0;
         }
     }
@@ -29,7 +34,7 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
     private boolean phenoOutdated;
     private List<Segment> phenotype;
     private boolean fitnessOutdated;
-    private double fitness;
+    private Fitness fitness;
 
     private static final double WEIGHT_OVDEV = 2.0;     // PENALIZES SEGMENTS BEING DISSIMILAR IN COLOR
     private static final double WEIGHT_EDGE = 1.0;      // REWARDS HAVING FEW NEIGHBOURING PIXELS
@@ -59,47 +64,27 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
             fitnessOutdated = true;
         }
         if (fitnessOutdated) {
-            Image image = problem.getImage();
-            Graph graph = problem.getGraph();
-
-            double deviation = 0.0;
-            double edge = 0.0;
-            double connectivity = 0.0;
-            for (Segment segment : phenotype) {
-                Set<Integer> allPixelsOfSegment = segment.getAll();
-                Pixel centroid = segment.getCentroid();
-                for (Integer pid : segment.getNonEdge()) {
-                    deviation += WEIGHT_OVDEV * image.getPixel(pid).distance(centroid);
-                    // TODO: Should Overall deviation be agnostic to the size of the segment?
-                }
-                for (Integer pid : segment.getEdge()) {
-                    for (Graph.Edge neighbour : graph.getAdjacent(pid)) {
-                        if (!allPixelsOfSegment.contains(neighbour.getToIndex())) {
-                            edge += WEIGHT_EDGE * neighbour.getCost();
-                            connectivity += WEIGHT_CONNECT * 0.125;
-                        }
-                    }
-                }
-            }
-            fitness = connectivity + deviation - edge;
+            fitness = calculateFitnessComponents(problem);
             fitnessOutdated = false;
         }
-        return fitness;
+        return fitness.connectivity + fitness.deviation - fitness.edge;
     }
-    public double dominates(ProblemImSeg problem, ChromoImSeg potentialSub) {
+
+    public int dominates(ProblemImSeg problem, ChromoImSeg potentialSub) {
+        calculateFitnessComponents(problem);
+
+        Fitness other = potentialSub.calculateFitnessComponents(problem);
+        return this.fitness.compareTo(other);
+    }
+
+    Fitness calculateFitnessComponents(ProblemImSeg problem) {
         if (phenoOutdated) {
             phenotype(problem);
             fitnessOutdated = true;
         }
-        if (fitnessOutdated) {
-            var potentialSubFitness = calculateFitnessComponents(problem);
-
-            fitnessOutdated = false;
+        if (!fitnessOutdated) {
+            return fitness;
         }
-        return fitness;
-    }
-
-    private Fitness calculateFitnessComponents(ProblemImSeg problem) {
         Image image = problem.getImage();
         Graph graph = problem.getGraph();
 
