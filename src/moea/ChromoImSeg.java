@@ -47,17 +47,23 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
         if (fitnessOutdated) {
             Image image = problem.getImage();
             Graph graph = problem.getGraph();
+
             double sum = 0.0;
             for (Segment segment : phenotype) {
+                Set<Integer> all = segment.getAll();
+                Pixel centroid = segment.getCentroid();
                 for (Integer pid : segment.getNonEdge()) {
-                    for (Graph.Edge neighbour : graph.getCardinals(pid)) {
-                        sum += WEIGHT_CONNECT * neighbour.getCost();
-                    }
-                    sum += WEIGHT_OVDEV * image.getPixel(pid).distance(segment.getCentroid());
+                    sum += WEIGHT_OVDEV * image.getPixel(pid).distance(centroid);
                 }
                 for (Integer pid : segment.getEdge()) {
-                    sum -= WEIGHT_EDGE * 0.125;
-                    sum += WEIGHT_OVDEV * image.getPixel(pid).distance(segment.getCentroid());
+                    sum += WEIGHT_OVDEV * image.getPixel(pid).distance(centroid);
+
+                    for (Graph.Edge neighbour : graph.getAdjacent(pid)) {
+                        if (!all.contains(neighbour.getToIndex())) {
+                            sum -= WEIGHT_EDGE * 0.125;
+                            sum += WEIGHT_CONNECT * neighbour.getCost();
+                        }
+                    }
                 }
             }
             fitness = sum;
