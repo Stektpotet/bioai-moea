@@ -28,6 +28,10 @@ public class UtilChromoImSeg {
         return overallDeviation;
     }
 
+    public static int dominates(ProblemImSeg problem, ChromoImSeg man, ChromoImSeg woman) {
+        return man.calculateFitnessComponents(problem).compareTo(woman.calculateFitnessComponents(problem));
+    }
+
     public static Comparator<ChromoImSeg> chromosomeFitnessComparator(ProblemImSeg problem) {
         return (a, b) -> (int) Math.signum(a.fitness(problem) - b.fitness(problem));
     }

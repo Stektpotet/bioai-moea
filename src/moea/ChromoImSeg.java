@@ -9,8 +9,8 @@ import java.util.stream.IntStream;
 
 public class ChromoImSeg implements Chromosome<ProblemImSeg> {
 
-    private static class Fitness implements Comparable<Fitness> {
-        final double edge, deviation, connectivity;
+    public static class Fitness implements Comparable<Fitness> {
+        private final double edge, deviation, connectivity;
 
         private Fitness(double edge, double deviation, double connectivity) {
             this.edge = edge;
@@ -26,6 +26,18 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
                 return -1;
             }
             return 0;
+        }
+
+        public double getEdge() {
+            return edge;
+        }
+
+        public double getDeviation() {
+            return deviation;
+        }
+
+        public double getConnectivity() {
+            return connectivity;
         }
     }
 
@@ -70,14 +82,7 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
         return fitness.connectivity + fitness.deviation - fitness.edge;
     }
 
-    public int dominates(ProblemImSeg problem, ChromoImSeg potentialSub) {
-        calculateFitnessComponents(problem);
-
-        Fitness other = potentialSub.calculateFitnessComponents(problem);
-        return this.fitness.compareTo(other);
-    }
-
-    Fitness calculateFitnessComponents(ProblemImSeg problem) {
+    public Fitness calculateFitnessComponents(ProblemImSeg problem) {
         if (phenoOutdated) {
             phenotype(problem);
             fitnessOutdated = true;
