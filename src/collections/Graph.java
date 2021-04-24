@@ -87,11 +87,11 @@ public class Graph {
     private List<List<Edge>> cardinalAdjacencyList;
 
     public List<Edge> getAdjacent(int flatIndex) {
-        return Collections.unmodifiableList(adjacencyList.get(flatIndex)); // returns an unmodifiable list
+        return adjacencyList.get(flatIndex);
     }
 
     public List<Edge> getCardinals(int flatIndex) {
-        return Collections.unmodifiableList(cardinalAdjacencyList.get(flatIndex));
+        return cardinalAdjacencyList.get(flatIndex);
     }
     public Graph(Image img) {
         adjacencyList = new ArrayList<>(img.getPixelCount());
@@ -154,8 +154,12 @@ public class Graph {
                     neighbours.add(new Edge(i, neighbour, p.distance(img.getPixel(neighbour))));
                 }
             }
+            neighbours = Collections.unmodifiableList(neighbours);
+            cardinalNeighbours = Collections.unmodifiableList(cardinalNeighbours);
             adjacencyList.add(neighbours);
             cardinalAdjacencyList.add(cardinalNeighbours);
         }
+        adjacencyList = Collections.unmodifiableList(adjacencyList);
+        cardinalAdjacencyList = Collections.unmodifiableList(cardinalAdjacencyList);
     }
 }

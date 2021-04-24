@@ -4,13 +4,22 @@ import java.util.*;
 
 public class RandomSet<E> extends AbstractSet<E> {
 
-    List<E> dta = new ArrayList<E>();
-    Map<E, Integer> idx = new HashMap<E, Integer>();
+    List<E> dta;
+    Map<E, Integer> idx;
 
     public RandomSet() {
+        dta = new ArrayList<>();
+        idx = new HashMap<>();
+    }
+
+    public RandomSet(int initialCapacity) {
+        dta = new ArrayList<>(initialCapacity);
+        idx = new HashMap<>(initialCapacity);
     }
 
     public RandomSet(Collection<E> items) {
+        dta = new ArrayList<>(items.size());
+        idx = new HashMap<>(items.size());
         for (E item : items) {
             idx.put(item, dta.size());
             dta.add(item);

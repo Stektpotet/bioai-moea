@@ -21,20 +21,18 @@ public class GeneticAlgorithmRunner<ProblemT, Pop extends Population<ProblemT, C
     private ParentSelector<ProblemT, C> parentSelector;
     private SurvivorSelector<ProblemT, Pop, C> survivorSelector;
     private final int populationSize;
-    private final int numGenerations;
 
     public GeneticAlgorithmRunner(Initializer<ProblemT, Pop, C> initializer,
                             Recombinator<C> recombinator,
                             Mutator<ProblemT, C> mutator,
                             ParentSelector<ProblemT, C> parentSelector,
-                            SurvivorSelector<ProblemT, Pop, C> survivorSelector, int populationSize, int numGenerations) {
+                            SurvivorSelector<ProblemT, Pop, C> survivorSelector, int populationSize) {
         this.initializer = initializer;
         this.recombinator = recombinator;
         this.mutator = mutator;
         this.parentSelector = parentSelector;
         this.survivorSelector = survivorSelector;
         this.populationSize = populationSize;
-        this.numGenerations = numGenerations;
     }
 
     @Override
@@ -42,14 +40,24 @@ public class GeneticAlgorithmRunner<ProblemT, Pop extends Population<ProblemT, C
         return new Task<>() {
             @Override
             protected GeneticAlgorithmSnapshot<C> call() throws Exception {
+                System.out.println("Starting GA...");
+                var start = System.nanoTime();
                 Pop pop = initializer.breed(populationSize);
+                System.out.println("Breeding took: " + (System.nanoTime() - start)/1000000 + "ms");
                 var generationCounter = IntStream.iterate(0, i -> i + 1).iterator();
-                for (;true;) {
+
+                updateValue(new GeneticAlgorithmSnapshot<>(0, pop.getOptimum()));
+
+                while (true) {
+                    start = System.nanoTime();
+                    Integer i = generationCounter.next();
+                    System.out.println("Doing generation #" + i);
                     List<C> parents = parentSelector.select(pop);
                     List<C> offspring = mutator.mutateAll(recombinator.recombine(parents));
                     pop = survivorSelector.select(pop, parents, offspring);
                     C optimum = pop.getOptimum();
-                    updateValue(new GeneticAlgorithmSnapshot<>(generationCounter.next(), optimum));
+                    updateValue(new GeneticAlgorithmSnapshot<>(i, optimum));
+                    System.out.println("Generation #" + i + " took: " + (System.nanoTime() - start)/1000000 + "ms");
                 }
             }
         };

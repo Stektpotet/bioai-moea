@@ -1,17 +1,22 @@
 package moea;
 
-import collections.Graph;
 import collections.Image;
 import collections.Pixel;
 
 import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.BinaryOperator;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class UtilChromoImSeg {
+
+    public static int hammingDistance(ChromoImSeg a, ChromoImSeg b) {
+        int dist = 0;
+        var genotypeA = a.cloneGenotype();
+        var genotypeB = a.cloneGenotype();
+
+        for (int i = 0; i < genotypeA.length; i++) {
+            dist += (genotypeA[i] == genotypeB[i]) ? 0 : 1;
+        }
+        return dist;
+    }
 
     public static double overallDeviation(final Image image, final List<Set<Integer>> segments) {
         double overallDeviation = 0;

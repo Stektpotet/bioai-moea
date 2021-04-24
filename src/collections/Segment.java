@@ -19,7 +19,7 @@ public class Segment {
                 img.getWidth() - 1,   img.getWidth(), img.getWidth() + 1
         };
         edge = new HashSet<>();
-        nonEdge = new HashSet<>();
+        nonEdge = new HashSet<>(pixelIdx.size());
         int[] avgColor = new int[3];
         for (Integer pid : all) {
             Pixel p = img.getPixel(pid);
@@ -29,6 +29,7 @@ public class Segment {
 
             boolean isEdge = false;
             for (int mn : moores) {
+                //TODO: check if on the same side of the image!
                 if (!pixelIdx.contains(pid + mn)) {
                     isEdge = true;
                     break;
@@ -46,6 +47,7 @@ public class Segment {
         centroid = new Pixel(avgColor[0], avgColor[1], avgColor[2]);
     }
 
+    // TODO: Make Unmodifiable
     public Set<Integer> getAll() {
         return Collections.unmodifiableSet(all);
     }

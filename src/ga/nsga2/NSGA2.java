@@ -54,7 +54,7 @@ public class NSGA2 {
         }
         return Collections.unmodifiableList(rankSorted);
         // TODO: because this is now using the defaulting get call, the map will cause a crash because it attempts to
-        //  add stuff upon getting values of unused keys -> resolved by copying content over into a list instead of
+        //  add stuff upon getting values of unused keys -> resolve this by copying content over into a list instead of
         //  using the map, though this can easily be reverted if a map is preferrable!
     }
 }

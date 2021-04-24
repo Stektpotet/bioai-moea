@@ -2,6 +2,7 @@ package sample;
 
 import collections.Image;
 import collections.Segment;
+import ga.GeneticAlgorithmRunner;
 import ga.RandomUtil;
 import javafx.application.Application;
 import javafx.geometry.Rectangle2D;
@@ -36,68 +37,55 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         primaryStage.setTitle("MOEA Image Segmentation");
-//        Canvas canvas = new Canvas(SCREEN_WIDTH, SCREEN_HEIGHT);
-        ImageView imgView = new ImageView();
-
-        ImageView groundTruthImageView = new ImageView(
-                new javafx.scene.image.Image(new FileInputStream("./res/training_images/86016/Test image.jpg")));
+        var previewImg = new javafx.scene.image.Image(
+                new FileInputStream("./res/training_images/86016/Test image.jpg"),
+                241, 161, true, false
+        );
+        ImageView imgView = new ImageView(previewImg);
+        ImageView groundTruthImageView = new ImageView(previewImg);
         Group root = new Group(imgView, groundTruthImageView);
         Scene scene = new Scene(root, SCREEN_WIDTH, SCREEN_HEIGHT, Color.BLACK);
         primaryStage.setResizable(false);
         primaryStage.setScene(scene);
 
-//        var visualizer = new ImSegVisualizer(SCREEN_WIDTH, SCREEN_HEIGHT, canvas.getGraphicsContext2D());
-
+        var start = System.nanoTime();
         ProblemImSeg problem = ImSegFiles.ReadImSegProblem("./res/training_images/86016/Test image.jpg");
-        var breeder = new Breeder(problem, 4, 50);
-        PopulationImSeg pop = breeder.breed(50);
-
-        TournamentSelection parentSelector = new TournamentSelection(10, 4);
-        UniformCrossoverer crossoverer = new UniformCrossoverer(0.5f);
-        MutatorImSeg mutator = new MutatorImSeg(0.01f);
-        MyPlusLambdaReplacement survivorSelector = new MyPlusLambdaReplacement(problem);
-
-        for (int i = 0; i < 50; i++) {
-            System.out.println("Doing generation: " + i);
-            var parents = parentSelector.select(pop);
-            var offspring = mutator.mutateAll(crossoverer.recombine(parents));
-            pop = survivorSelector.select(pop, parents, offspring);
-        }
-        ChromoImSeg c = pop.getOptimum();
-
-        Random colorRand = new Random(69);
-//        ChromoImSeg c = pop.get(2);
-        List<Segment> segments = c.getPhenotype(problem);
-        int[] segmentColors = IntStream.generate(colorRand::nextInt).limit(segments.size()).toArray();
-
-        Image problemImage = problem.getImage();
-        WritableImage segmentImg = new WritableImage(problemImage.getWidth(), problemImage.getHeight());
-
-        int[] segmentImgRaw = new int[problemImage.getPixelCount()];
-
-        System.out.println(segments.size());
-        for (int i = 0; i < segments.size(); i++) {
-            Segment segment = segments.get(i);
-            for (var p : segment.getEdge()) {
-                segmentImgRaw[p] = 0x0000ff00;
-            }
-            for (var p : segment.getNonEdge()) { // for all pixels in a segment
-                if (p >= problemImage.getPixelCount())
-                    continue; // TODO: Does this ever happen?
-                segmentImgRaw[p] = segmentColors[i];
-            }
-        }
-
-        segmentImg.getPixelWriter().setPixels(
-                0, 0, problemImage.getWidth(), problemImage.getHeight(),
-                PixelFormat.getIntArgbPreInstance(), segmentImgRaw, 0, problemImage.getWidth()
+        System.out.println("Problem reading took: " + (System.nanoTime() - start)/1000000 + "ms");
+        GeneticAlgorithmRunner<ProblemImSeg, PopulationImSeg, ChromoImSeg> gaRunner = new GeneticAlgorithmRunner<>(
+                new Breeder(problem, 1, 50),
+                new UniformCrossoverer(0.5f),
+                new MutatorImSeg(0.7f),
+                new TournamentSelection(10, 4),
+                new ParentPhaseoutReplacement(problem),
+                60
         );
 
-//        WritableImage img = new WritableImage(problemImage.getWidth(), problemImage.getHeight());
-//        img.getPixelWriter().setPixels(
-//                0, 0, problemImage.getWidth(), problemImage.getHeight(),
-//                PixelFormat.getByteRgbInstance(), problemImage.getRawImage(), 0, problemImage.getWidth()*3);
-        imgView.setImage(segmentImg);
+        Image image = problem.getImage();
+        int[] groundTruthImageRaw = new int[image.getPixelCount()];
+        groundTruthImageView.getImage().getPixelReader().getPixels(
+                0, 0, image.getWidth(), image.getHeight(),
+                PixelFormat.getIntArgbPreInstance(), groundTruthImageRaw,
+                0, image.getWidth()
+        );
+
+        gaRunner.valueProperty().addListener( (obs, oldSnap, newSnap) -> {
+            List<Segment> segments = newSnap.optimum.getPhenotype(problem);
+            WritableImage segmentImg = new WritableImage(image.getWidth(), image.getHeight());
+
+            int[] segmentImgRaw = groundTruthImageRaw.clone();
+
+            for (Segment segment : segments) {
+                for (var p : segment.getEdge()) {
+                    segmentImgRaw[p] = 0x0000ff00; // green
+                }
+            }
+
+            segmentImg.getPixelWriter().setPixels(
+                    0, 0, image.getWidth(), image.getHeight(),
+                    PixelFormat.getIntArgbPreInstance(), segmentImgRaw, 0, image.getWidth()
+            );
+            imgView.setImage(segmentImg);
+        });
 
 //        imgView.setOpacity(0.1);
         imgView.setFitWidth(SCREEN_WIDTH * .5);
@@ -105,10 +93,9 @@ public class Main extends Application {
         groundTruthImageView.setFitWidth(SCREEN_WIDTH * .5);
         groundTruthImageView.setFitHeight(SCREEN_HEIGHT * .5);
         groundTruthImageView.setX(SCREEN_WIDTH * .5);
-//        imgView.resize(2, 2);
-//        visualizer.drawGraph(problem);
-
         primaryStage.show();
+
+        gaRunner.start();
     }
 
     public static int getRGB(Color col) {

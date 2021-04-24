@@ -40,10 +40,10 @@ public class UniformCrossoverer implements Recombinator<ChromoImSeg> {
 
     @Override
     public List<ChromoImSeg> crossover(final ChromoImSeg mum, final ChromoImSeg dad) {
-        int geneCount = mum.getGenotype().length;
+        int geneCount = mum.cloneGenotype().length;
 
-        final ChromoImSeg.EdgeOut[] mumGenes = mum.getGenotype();
-        final ChromoImSeg.EdgeOut[] dadGenes = dad.getGenotype();
+        final ChromoImSeg.EdgeOut[] mumGenes = mum.cloneGenotype();
+        final ChromoImSeg.EdgeOut[] dadGenes = dad.cloneGenotype();
         ChromoImSeg.EdgeOut[] dauGenes = new ChromoImSeg.EdgeOut[geneCount];
         ChromoImSeg.EdgeOut[] sonGenes = new ChromoImSeg.EdgeOut[geneCount];
 
@@ -63,10 +63,10 @@ public class UniformCrossoverer implements Recombinator<ChromoImSeg> {
         ChromoImSeg dau = new ChromoImSeg(dauGenes);
         ChromoImSeg son = new ChromoImSeg(sonGenes);
 
-        List<ChromoImSeg> children = new ArrayList<>(2);
+        List<ChromoImSeg> children = new ArrayList<>();
         children.add(dau);
         children.add(son);
 
-        return children;
+        return children; //replaced array list creation
     }
 }

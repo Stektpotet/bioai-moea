@@ -18,7 +18,7 @@ public class MyPlusLambdaReplacement implements SurvivorSelector<ProblemImSeg, P
 
     @Override
     public PopulationImSeg select(PopulationImSeg generation, List<ChromoImSeg> parents, List<ChromoImSeg> offspring) {
-        List<ChromoImSeg> myPlusLa = new ArrayList<>(generation);
+        ArrayList<ChromoImSeg> myPlusLa = new ArrayList<>(generation);
         myPlusLa.addAll(offspring);
         myPlusLa.sort(UtilChromoImSeg.chromosomeFitnessComparator(problem));
         return new PopulationImSeg(problem, myPlusLa.subList(0, generation.size()));

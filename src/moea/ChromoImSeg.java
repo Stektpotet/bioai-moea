@@ -16,9 +16,9 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
     private boolean fitnessOutdated;
     private double fitness;
 
-    private static final double WEIGHT_OVDEV = 0.5;
-    private static final double WEIGHT_EDGE = 20.0;
-    private static final double WEIGHT_CONNECT = 1.0;
+    private static final double WEIGHT_OVDEV = 2.0;     // PENALIZES SEGMENTS BEING DISSIMILAR IN COLOR
+    private static final double WEIGHT_EDGE = 1.0;      // REWARDS HAVING FEW NEIGHBOURING PIXELS
+    private static final double WEIGHT_CONNECT = 2.0;   // PENALIZES SEGMENTS
 
     public ChromoImSeg(EdgeOut[] genotype) {
         this.genotype = genotype;
@@ -26,15 +26,14 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
         this.fitnessOutdated = true;
     }
 
-    public List<Segment> getPhenotype (ProblemImSeg problem) throws Exception {
+    public List<Segment> getPhenotype (ProblemImSeg problem) {
         if (phenoOutdated) {
             phenotype(problem);
         }
         return phenotype;
     }
 
-    public EdgeOut[] getGenotype() {
-        // TODO: find out how to make immutable
+    public EdgeOut[] cloneGenotype() {
         return genotype.clone();
     }
 
@@ -48,38 +47,32 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
             Image image = problem.getImage();
             Graph graph = problem.getGraph();
 
-            double sum = 0.0;
+            double deviation = 0.0;
+            double edge = 0.0;
+            double connectivity = 0.0;
             for (Segment segment : phenotype) {
-                Set<Integer> all = segment.getAll();
+                Set<Integer> allPixelsOfSegment = segment.getAll();
                 Pixel centroid = segment.getCentroid();
                 for (Integer pid : segment.getNonEdge()) {
-                    sum += WEIGHT_OVDEV * image.getPixel(pid).distance(centroid);
+                    deviation += WEIGHT_OVDEV * image.getPixel(pid).distance(centroid);
+                    // TODO: Should Overall deviation be agnostic to the size of the segment?
                 }
                 for (Integer pid : segment.getEdge()) {
-                    sum += WEIGHT_OVDEV * image.getPixel(pid).distance(centroid);
-
                     for (Graph.Edge neighbour : graph.getAdjacent(pid)) {
-                        if (!all.contains(neighbour.getToIndex())) {
-                            sum -= WEIGHT_EDGE * 0.125;
-                            sum += WEIGHT_CONNECT * neighbour.getCost();
+                        if (!allPixelsOfSegment.contains(neighbour.getToIndex())) {
+                            edge += WEIGHT_EDGE * neighbour.getCost();
+                            connectivity += WEIGHT_CONNECT * 0.125;
                         }
                     }
                 }
             }
-            fitness = sum;
+            fitness = connectivity + deviation - edge;
             fitnessOutdated = false;
         }
         return fitness;
     }
 
-    private double edgeOrConnectivity(Set<Integer> segment, Graph.Edge e) {
-        if (segment.contains(e.getToIndex())) {
-            return WEIGHT_CONNECT * e.getCost();
-        }
-        return - WEIGHT_EDGE * 0.125;
-    }
-
-    List<Segment> phenotype(ProblemImSeg image) {
+    List<Segment> phenotype(ProblemImSeg problem) {
 
         if (!phenoOutdated) {
             return phenotype;
@@ -98,7 +91,7 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
             Integer predecessor;
             while (true) {
                 predecessor = element;
-                element = pointsTo(image, predecessor);
+                element = pointsTo(problem, predecessor);
 
                 // Check if the segment does not already contain contain the element pointed to
                 if (!currentSegment.add(element)) {
@@ -127,9 +120,12 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
         }
 
 
-        phenotype = Collections.unmodifiableList(
-                segmentation.stream().map(s -> new Segment(s, image.getImage())).toList()
-        );
+        List<Segment> segments = new ArrayList<>(segmentation.size());
+        for (var protoSegment : segmentation) {
+            segments.add(new Segment(protoSegment, problem.getImage()));
+        }
+
+        phenotype = Collections.unmodifiableList(segments);
         phenoOutdated = false;
         fitnessOutdated = true;
         return phenotype;

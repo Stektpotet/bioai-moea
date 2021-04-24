@@ -32,6 +32,6 @@ public class Pixel {
         float r = (rgb[0] - other.rgb[0]) / 255F;
         float g = (rgb[1] - other.rgb[1]) / 255F;
         float b = (rgb[2] - other.rgb[2]) / 255F;
-        return Math.sqrt(r*r + g*g + b*b);
+        return Math.sqrt((r*r + g*g + b*b) / 3.0); // Normalized in range 0 - 1
     }
 }
