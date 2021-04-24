@@ -1,17 +1,17 @@
 package ga.nsga2;
 
 import collections.DefaultHashMap;
+import collections.Pareto;
 import ga.data.Chromosome;
-import moea.ChromoImSeg;
-import moea.ga.PopulationImSeg;
+import ga.data.Population;
 
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class NSGA2 {
 
-    public static <Pop> List<List<ChromoImSeg>> FastNonDominatedSort(PopulationImSeg solutions, Comparator<ChromoImSeg> domination) {
+    public static <TProblem, TChromosome extends Chromosome<TProblem>> Pareto<TProblem, TChromosome>
+    FastNonDominatedSort(Population<TProblem, TChromosome> solutions, Comparator<TChromosome> domination) {
 
         // Replace the DefaultHashMap with HashMap and check component existence
         DefaultHashMap<Integer, List<Integer>> rankSortedFronts =  new DefaultHashMap<>(ArrayList::new);
@@ -53,10 +53,13 @@ public class NSGA2 {
         }
 
         // 3. Build a feasible return value with solutions sorted by rank of non-domination
-        List<List<ChromoImSeg>> rankSorted = new ArrayList<>(rankSortedFronts.size());
+        List<List<TChromosome>> rankSorted = new ArrayList<>(rankSortedFronts.size());
         for (int i = 1; i <= rankSortedFronts.size(); i++) {
             rankSorted.add(rankSortedFronts.get(i).stream().map(solutions::get).collect(Collectors.toList()));
         }
-        return Collections.unmodifiableList(rankSorted);
+        return new Pareto<>(rankSorted);
     }
 }
+
+
+
