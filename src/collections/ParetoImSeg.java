@@ -1,29 +1,29 @@
 package collections;
 
-import ga.data.Chromosome;
+import moea.ChromoImSeg;
 
 import java.util.*;
 
-public class Pareto<TProblem, TChromosome extends Chromosome<TProblem>>  {
-    List<List<TChromosome>> fronts;
-    Map<TChromosome, Integer> rankMap;
+public class ParetoImSeg {
+    List<List<ChromoImSeg>> fronts;
+    Map<ChromoImSeg, Integer> rankMap;
 
-    public Pareto(List<List<TChromosome>> fronts) {
+    public ParetoImSeg(List<List<ChromoImSeg>> fronts) {
         this.fronts = List.copyOf(fronts);
         this.rankMap = new HashMap<>();
         for (int i = 1; i <= this.fronts.size(); i++) {
-            for (TChromosome chromosome : this.fronts.get(i)) {
+            for (ChromoImSeg chromosome : this.fronts.get(i)) {
                 rankMap.put(chromosome, i);
             }
         }
         this.rankMap = Collections.unmodifiableMap(rankMap);
     }
 
-    public int getFrontRank(TChromosome chromosome) {
+    public int getFrontRank(ChromoImSeg chromosome) {
         return rankMap.get(chromosome);
     }
 
-    public List<TChromosome> getFront(int i) {
+    public List<ChromoImSeg> getFront(int i) {
         return fronts.get(i);
     }
 }

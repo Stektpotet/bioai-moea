@@ -11,6 +11,7 @@ public class ParentSelectorMOEA implements ParentSelector<ProblemImSeg, ChromoIm
 
     @Override
     public List<ChromoImSeg> select(Population<ProblemImSeg, ChromoImSeg> population) throws Exception {
+
         return null;
     }
 }
