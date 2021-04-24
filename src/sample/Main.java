@@ -56,7 +56,7 @@ public class Main extends Application {
                 new UniformCrossoverer(0.5f),
                 new MutatorImSeg(0.7f),
                 new TournamentSelection(10, 4),
-                new ParentPhaseoutReplacement(problem),
+                new CrowdingSelector(problem, 10),
                 60
         );
 

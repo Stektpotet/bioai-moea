@@ -5,10 +5,25 @@ import ga.RandomUtil;
 import ga.data.Chromosome;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class ChromoImSeg implements Chromosome<ProblemImSeg> {
+
+    private static class Fitness implements Comparable<Fitness> {
+        final double edge, deviation, connectivity;
+
+        private Fitness(double edge, double deviation, double connectivity) {
+            this.edge = edge;
+            this.deviation = deviation;
+            this.connectivity = connectivity;
+        }
+
+        @Override
+        public int compareTo(Fitness o) {
+            return 0;
+        }
+    }
+
 
     private final EdgeOut[] genotype;
     private boolean phenoOutdated;
@@ -18,7 +33,7 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
 
     private static final double WEIGHT_OVDEV = 2.0;     // PENALIZES SEGMENTS BEING DISSIMILAR IN COLOR
     private static final double WEIGHT_EDGE = 1.0;      // REWARDS HAVING FEW NEIGHBOURING PIXELS
-    private static final double WEIGHT_CONNECT = 2.0;   // PENALIZES SEGMENTS
+    private static final double WEIGHT_CONNECT = 2.0;   // PENALIZES SEGMENTS ...?
 
     public ChromoImSeg(EdgeOut[] genotype) {
         this.genotype = genotype;
@@ -71,9 +86,46 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
         }
         return fitness;
     }
+    public double dominates(ProblemImSeg problem, ChromoImSeg potentialSub) {
+        if (phenoOutdated) {
+            phenotype(problem);
+            fitnessOutdated = true;
+        }
+        if (fitnessOutdated) {
+            var potentialSubFitness = calculateFitnessComponents(problem);
+
+            fitnessOutdated = false;
+        }
+        return fitness;
+    }
+
+    private Fitness calculateFitnessComponents(ProblemImSeg problem) {
+        Image image = problem.getImage();
+        Graph graph = problem.getGraph();
+
+        double deviation = 0.0;
+        double edge = 0.0;
+        double connectivity = 0.0;
+
+        for (Segment segment : phenotype) {
+            Set<Integer> allPixelsOfSegment = segment.getAll();
+            Pixel centroid = segment.getCentroid();
+            for (Integer pid : segment.getNonEdge()) {
+                deviation += WEIGHT_OVDEV * image.getPixel(pid).distance(centroid);
+            }
+            for (Integer pid : segment.getEdge()) {
+                for (Graph.Edge neighbour : graph.getAdjacent(pid)) {
+                    if (!allPixelsOfSegment.contains(neighbour.getToIndex())) {
+                        edge += WEIGHT_EDGE * neighbour.getCost();
+                        connectivity += WEIGHT_CONNECT * 0.125;
+                    }
+                }
+            }
+        }
+        return new Fitness(edge, deviation, connectivity);
+    }
 
     List<Segment> phenotype(ProblemImSeg problem) {
-
         if (!phenoOutdated) {
             return phenotype;
         }

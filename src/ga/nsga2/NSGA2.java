@@ -2,6 +2,8 @@ package ga.nsga2;
 
 import collections.DefaultHashMap;
 import ga.data.Chromosome;
+import moea.ChromoImSeg;
+import moea.ga.PopulationImSeg;
 
 import java.lang.reflect.Array;
 import java.util.*;
@@ -9,9 +11,12 @@ import java.util.stream.Collectors;
 
 public class NSGA2 {
 
-    public static <Pop> List<List<Chromosome<Pop>>> FastNonDominatedSort(List<Chromosome<Pop>> solutions, Comparator<Chromosome<Pop>> domination) {
+    public static <Pop> List<List<ChromoImSeg>> FastNonDominatedSort(PopulationImSeg solutions, Comparator<ChromoImSeg> domination) {
+
+        // Replace the DefaultHashMap with HashMap and check component existence
         DefaultHashMap<Integer, List<Integer>> rankSortedFronts =  new DefaultHashMap<>(ArrayList::new);
         DefaultHashMap<Integer, Set<Integer>> dominatedBy = new DefaultHashMap<>(HashSet::new);
+
         int[] dominates = new int[solutions.size()];
 
         // 1. Compute domination relations between all solutions and pick out first front
@@ -48,13 +53,10 @@ public class NSGA2 {
         }
 
         // 3. Build a feasible return value with solutions sorted by rank of non-domination
-        List<List<Chromosome<Pop>>> rankSorted = new ArrayList<>(rankSortedFronts.size());
+        List<List<ChromoImSeg>> rankSorted = new ArrayList<>(rankSortedFronts.size());
         for (int i = 1; i <= rankSortedFronts.size(); i++) {
             rankSorted.add(rankSortedFronts.get(i).stream().map(solutions::get).collect(Collectors.toList()));
         }
         return Collections.unmodifiableList(rankSorted);
-        // TODO: because this is now using the defaulting get call, the map will cause a crash because it attempts to
-        //  add stuff upon getting values of unused keys -> resolve this by copying content over into a list instead of
-        //  using the map, though this can easily be reverted if a map is preferrable!
     }
 }
