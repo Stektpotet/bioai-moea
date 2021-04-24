@@ -5,6 +5,7 @@ import ga.RandomUtil;
 import ga.data.Chromosome;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class ChromoImSeg implements Chromosome<ProblemImSeg> {
@@ -15,8 +16,8 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
     private boolean fitnessOutdated;
     private double fitness;
 
-    private static final double WEIGHT_OVDEV = 0.4;
-    private static final double WEIGHT_EDGE = 0.1;
+    private static final double WEIGHT_OVDEV = 0.5;
+    private static final double WEIGHT_EDGE = 20.0;
     private static final double WEIGHT_CONNECT = 1.0;
 
     public ChromoImSeg(EdgeOut[] genotype) {
@@ -130,7 +131,6 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
         }
 
         RandomSet<Integer> unvisited = IntStream.range(0, genotype.length).collect(RandomSet::new, RandomSet::add, RandomSet::addAll);
-//        List<Segment> segments = new ArrayList<>();
         List<Set<Integer>> segmentation = new ArrayList<>();
 
         while (!unvisited.isEmpty()) {
