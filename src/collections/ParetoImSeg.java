@@ -33,10 +33,10 @@ public class ParetoImSeg {
         return crowdingDistances.get(chromosome);
     }
 
-    public double compare(ChromoImSeg one, ChromoImSeg other) {
+    public int compare(ChromoImSeg one, ChromoImSeg other) {
         int rankComparison = getFrontRank(one) - getFrontRank(other);
         if (rankComparison == 0) {
-            return getCrowdingDistance(one) - getCrowdingDistance(other);
+            return Double.compare(getCrowdingDistance(one), getCrowdingDistance(other));
         }
         return rankComparison;
     }
