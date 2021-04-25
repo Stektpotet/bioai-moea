@@ -1,18 +1,13 @@
 package sample;
 
 import collections.Image;
-import collections.Segment;
 import ga.GeneticAlgorithmRunner;
-import ga.RandomUtil;
 import ga.nsga2.ParentSelectorMOEA;
 import ga.nsga2.SurvivorSelectorMOEA;
 import javafx.application.Application;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.canvas.Canvas;
 import javafx.scene.image.ImageView;
-import javafx.scene.image.PixelFormat;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -20,38 +15,46 @@ import moea.ChromoImSeg;
 import moea.ImSegFiles;
 import moea.ProblemImSeg;
 import moea.ga.*;
-import moea.visual.ImSegVisualizer;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.util.List;
-import java.util.Random;
-import java.util.Set;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class MainMOEA extends Application {
 
     private static final int
-            SCREEN_WIDTH = 1280,
-            SCREEN_HEIGHT = (int)(1280/1.49689440994); // Aspect Ratio of image
+            IMAGE_WIDTH     = 241,
+            IMAGE_HEIGHT    = 161,
+            NUM_PREVIEW_IMAGES = 5,
+            SCREEN_WIDTH    = IMAGE_WIDTH * 2 * 3,
+            SCREEN_HEIGHT   = IMAGE_HEIGHT * 2 * 2; //(int)(1280/1.49689440994); // Aspect Ratio of image
 
     @Override
     public void start(Stage primaryStage) throws Exception {
         primaryStage.setTitle("MOEA Image Segmentation");
         var previewImg = new javafx.scene.image.Image(
-                new FileInputStream("./res/training_images/86016/Test image.jpg"),
+                new FileInputStream("./res/training_images/118035/Test image.jpg"),
                 241, 161, true, false
         );
-        ImageView imgView = new ImageView(previewImg);
-        ImageView trainingImageView = new ImageView(previewImg);
-        Group root = new Group(imgView, trainingImageView);
+        ImageView[] paretoOptimalPreviews = new ImageView[NUM_PREVIEW_IMAGES];
+        WritableImage[] paretoOptimalImgs = new WritableImage[NUM_PREVIEW_IMAGES];
+        for (int i = 0; i < NUM_PREVIEW_IMAGES; i++) {
+            paretoOptimalImgs[i] = new WritableImage(IMAGE_WIDTH, IMAGE_HEIGHT);
+            paretoOptimalPreviews[i] = new ImageView(paretoOptimalImgs[i]);
+            paretoOptimalPreviews[i].setFitWidth(IMAGE_WIDTH * 2);
+            paretoOptimalPreviews[i].setFitHeight(IMAGE_HEIGHT * 2);
+            paretoOptimalPreviews[i].setX(IMAGE_WIDTH * 2 * (i % 3));
+            paretoOptimalPreviews[i].setY(IMAGE_HEIGHT * 2 * (i / 3));
+            System.out.println(IMAGE_WIDTH * 2 * (i % 3) + ", " + IMAGE_HEIGHT * 2 * (i / 3));
+        }
+
+        Group root = new Group(paretoOptimalPreviews);
         Scene scene = new Scene(root, SCREEN_WIDTH, SCREEN_HEIGHT, Color.BLACK);
+
         primaryStage.setResizable(false);
         primaryStage.setScene(scene);
 
         var start = System.nanoTime();
-        ProblemImSeg problem = ImSegFiles.ReadImSegProblem("./res/training_images/86016/Test image.jpg");
+        ProblemImSeg problem = ImSegFiles.ReadImSegProblem("./res/training_images/118035/Test image.jpg");
         System.out.println("Problem reading took: " + (System.nanoTime() - start)/1000000 + "ms");
         GeneticAlgorithmRunner<ProblemImSeg, PopulationImSeg, ChromoImSeg> gaRunner = new GeneticAlgorithmRunner<>(
                 new Breeder(problem, 1, 15),
@@ -61,16 +64,23 @@ public class MainMOEA extends Application {
                 new SurvivorSelectorMOEA(),
                 50
         );
-
         Image image = problem.getImage();
-        int[] trainingImageRaw = ImageUtil.readImage(trainingImageView.getImage());
+        int[] trainingImageRaw = image.rawImage();
 
         gaRunner.valueProperty().addListener( (obs, oldSnap, newSnap) -> {
-            List<Segment> segments = newSnap.optimum.getPhenotype(problem);
-            WritableImage segmentImg = new WritableImage(image.getWidth(), image.getHeight());
-            int[] traced = ImageUtil.traceSegmentsOnto(trainingImageRaw, segments);
-            ImageUtil.writeImage(segmentImg, traced);
-            imgView.setImage(segmentImg);
+            List<ChromoImSeg> optima = newSnap.optima;
+            int segmentationsToShow = Math.min(optima.size(), 5);
+            int i = 0;
+            for (ImageView imgView : paretoOptimalPreviews) {
+                if (i >= segmentationsToShow) {
+                    ImageUtil.clearImage(paretoOptimalImgs[i]);
+                    continue;
+                }
+                int[] traced = ImageUtil.traceSegments(trainingImageRaw, optima.get(i).getPhenotype(problem));
+                ImageUtil.writeImage(paretoOptimalImgs[i], traced);
+                paretoOptimalPreviews[i].setImage(paretoOptimalImgs[i]);
+                i++;
+            }
         });
 
         primaryStage.setOnCloseRequest(event -> {
@@ -85,11 +95,11 @@ public class MainMOEA extends Application {
         });
 
 //        imgView.setOpacity(0.1);
-        imgView.setFitWidth(SCREEN_WIDTH * .5);
-        imgView.setFitHeight(SCREEN_HEIGHT * .5);
-        trainingImageView.setFitWidth(SCREEN_WIDTH * .5);
-        trainingImageView.setFitHeight(SCREEN_HEIGHT * .5);
-        trainingImageView.setX(SCREEN_WIDTH * .5);
+//        imgView.setFitWidth(SCREEN_WIDTH * .5);
+//        imgView.setFitHeight(SCREEN_HEIGHT * .5);
+//        trainingImageView.setFitWidth(SCREEN_WIDTH * .5);
+//        trainingImageView.setFitHeight(SCREEN_HEIGHT * .5);
+//        trainingImageView.setX(SCREEN_WIDTH * .5);
         primaryStage.show();
 
         gaRunner.start();

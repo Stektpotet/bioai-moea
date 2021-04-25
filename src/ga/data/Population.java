@@ -1,37 +1,34 @@
 package ga.data;
 
 
-import moea.ProblemImSeg;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
- * @param <C> Chromosome
+ * @param <TChromo> Chromosome
  */
-public abstract class Population<ProblemT, C extends Chromosome<ProblemT>> extends ArrayList<C> {
-    protected ProblemT problem;
+public abstract class Population<TProblem, TChromo extends Chromosome<TProblem>> extends ArrayList<TChromo> {
+    protected TProblem problem;
 
-    public Population(ProblemT problem, List<C> individuals) {
+    public Population(TProblem problem, List<TChromo> individuals) {
         this.addAll(individuals);
         this.problem = problem;
     }
 
-    public C getOptimum() throws Exception {
+    public List<TChromo> getOptima() throws Exception {
         double minFitness = get(0).fitness(problem);
-        C fittest = get(0);
-        for (C c : this){
+        TChromo fittest = get(0);
+        for (TChromo c : this){
             double currentFitness = c.fitness(problem);
             if (currentFitness < minFitness) {
                 minFitness = currentFitness;
                 fittest = c;
             }
         }
-        return fittest;
+        return List.of(fittest);
     }
 
-    public ProblemT getProblem() {
+    public TProblem getProblem() {
         return problem;
     }
 }

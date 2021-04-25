@@ -28,8 +28,7 @@ public class ParentSelectorMOEA implements ParentSelector<ProblemImSeg, Populati
         List<ChromoImSeg> parents = new ArrayList<>(numParents);
         for (int i = 0; i < numParents; i++) {
             List<ChromoImSeg> pool =  RandomUtil.randomChoice(population, tournamentSize, false);
-            // TODO: Check sorting order
-            parents.add(pool.stream().max(sorted::compare).get());
+            parents.add(pool.stream().min(sorted::compare).get());
         }
         return parents;
     }

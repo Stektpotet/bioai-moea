@@ -8,6 +8,7 @@ import moea.UtilChromoImSeg;
 import moea.ga.PopulationImSeg;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -33,8 +34,7 @@ public class SurvivorSelectorMOEA implements SurvivorSelector<ProblemImSeg, Popu
             nextGeneration.addAll(front);
         }
 
-        front.sort(Comparator.comparingDouble(sorted::getCrowdingDistance));
-        //TODO: check if sorted the right way around!
+        front.sort(Collections.reverseOrder(Comparator.comparingDouble(sorted::getCrowdingDistance)));
         while (nextGeneration.size() < size) {
             nextGeneration.add(front.remove(0));
         }

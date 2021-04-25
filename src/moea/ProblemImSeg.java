@@ -4,9 +4,6 @@ import collections.Graph;
 import collections.Image;
 import collections.Pixel;
 
-import java.util.List;
-import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class ProblemImSeg {

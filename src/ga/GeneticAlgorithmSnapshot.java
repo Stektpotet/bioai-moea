@@ -2,16 +2,18 @@ package ga;
 
 import ga.data.Chromosome;
 
+import java.util.List;
+
 
 /**
  * A snapshot of the current state of the genetic algorithm, representing the best
- * @param <C>
+ * @param <TChromo>
  */
-public class GeneticAlgorithmSnapshot<C extends Chromosome> {
+public class GeneticAlgorithmSnapshot<TChromo extends Chromosome> {
     public final int currentGeneration;
-    public final C optimum;
-    GeneticAlgorithmSnapshot(int currentGeneration, C optimum) {
+    public final List<TChromo> optima;
+    GeneticAlgorithmSnapshot(int currentGeneration, List<TChromo> optima) {
         this.currentGeneration = currentGeneration;
-        this.optimum = optimum;
+        this.optima = optima;
     }
 }
