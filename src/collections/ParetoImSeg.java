@@ -7,8 +7,9 @@ import java.util.*;
 public class ParetoImSeg {
     List<List<ChromoImSeg>> fronts;
     Map<ChromoImSeg, Integer> rankMap;
+    Map<ChromoImSeg, Double> crowdingDistances;
 
-    public ParetoImSeg(List<List<ChromoImSeg>> fronts) {
+    public ParetoImSeg(List<List<ChromoImSeg>> fronts, Map<ChromoImSeg, Double> crowdingDistances) {
         this.fronts = List.copyOf(fronts);
         this.rankMap = new HashMap<>();
         for (int i = 1; i <= this.fronts.size(); i++) {
@@ -17,6 +18,7 @@ public class ParetoImSeg {
             }
         }
         this.rankMap = Collections.unmodifiableMap(rankMap);
+        this.crowdingDistances = crowdingDistances;
     }
 
     public int getFrontRank(ChromoImSeg chromosome) {
@@ -25,5 +27,9 @@ public class ParetoImSeg {
 
     public List<ChromoImSeg> getFront(int i) {
         return fronts.get(i);
+    }
+
+    public double getCrowdingDistance(ChromoImSeg chromosome) {
+        return crowdingDistances.get(chromosome);
     }
 }

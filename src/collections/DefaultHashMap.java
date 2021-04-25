@@ -10,6 +10,11 @@ public class DefaultHashMap<TKey, TValue> extends HashMap<TKey, TValue> {
         this.defaultValueSupplier = defaultValueSupplier;
     }
 
+    public DefaultHashMap(Supplier<TValue> defaultValueSupplier, int initialCapacity) {
+        super(initialCapacity);
+        this.defaultValueSupplier = defaultValueSupplier;
+    }
+
     @Override
     public TValue get(Object key) {
         TValue value = super.get(key);

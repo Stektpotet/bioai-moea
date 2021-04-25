@@ -3,9 +3,11 @@ package ga.nsga2;
 import collections.DefaultHashMap;
 import collections.ParetoImSeg;
 import moea.ChromoImSeg;
+import moea.ProblemImSeg;
 import moea.ga.PopulationImSeg;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class NSGA2 {
@@ -56,7 +58,55 @@ public class NSGA2 {
         for (int i = 1; i <= rankSortedFronts.size(); i++) {
             rankSorted.add(rankSortedFronts.get(i).stream().map(solutions::get).collect(Collectors.toList()));
         }
-        return new ParetoImSeg(rankSorted);
+
+        return new ParetoImSeg(rankSorted, crowdingDistances(solutions.getProblem(), solutions));
+
+    }
+
+    private static Map<ChromoImSeg, Double> crowdingDistances(ProblemImSeg problem, PopulationImSeg pop) {
+        //Map<ChromoImSeg, Double> distances = new HashMap<>(pop.size());
+        DefaultHashMap<ChromoImSeg, Double> distances = new DefaultHashMap<>(() -> 0.0, pop.size());
+
+        // connectivity
+        addCrowdDistAlong(problem, pop, distances, ChromoImSeg.Fitness::getConnectivity);
+
+        // edge value
+        addCrowdDistAlong(problem, pop, distances, ChromoImSeg.Fitness::getEdge);
+
+        // overall deviation
+        addCrowdDistAlong(problem, pop, distances, ChromoImSeg.Fitness::getDeviation);
+        
+        return distances;
+    }
+
+    private static void addCrowdDistAlong(ProblemImSeg problem, PopulationImSeg pop, DefaultHashMap<ChromoImSeg,
+            Double> distances, Function<ChromoImSeg.Fitness, Double> objective) {
+        pop.sort(Comparator.comparingDouble(a -> objective.apply(a.calculateFitnessComponents(problem))));
+        Iterator<ChromoImSeg> connectivityIterator = pop.iterator();
+
+        ChromoImSeg forwardChromo = connectivityIterator.next();
+        ChromoImSeg backwardChromo = connectivityIterator.next();
+
+        distances.put(forwardChromo, Double.POSITIVE_INFINITY);
+
+        double backwardsDistance;
+        double forwardDistance;
+        double distance;
+        while (connectivityIterator.hasNext()) {
+            distance = Math.abs(objective.apply(forwardChromo.calculateFitnessComponents(problem))
+                    - objective.apply(backwardChromo.calculateFitnessComponents(problem)) * (1.0 / 6.0));
+            
+            forwardDistance = distances.get(forwardChromo);
+            distances.put(forwardChromo, forwardDistance + distance);
+
+            backwardsDistance = distances.get(backwardChromo);
+            distances.put(backwardChromo, backwardsDistance + distance);
+            
+            forwardChromo = backwardChromo;
+            backwardChromo = connectivityIterator.next();
+        }
+
+        distances.put(backwardChromo, Double.POSITIVE_INFINITY);
     }
 }
 
