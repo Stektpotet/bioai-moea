@@ -12,9 +12,9 @@ public class ParetoImSeg {
     public ParetoImSeg(List<List<ChromoImSeg>> fronts, Map<ChromoImSeg, Double> crowdingDistances) {
         this.fronts = List.copyOf(fronts);
         Map<ChromoImSeg, Integer> rankMap = new HashMap<>();
-        for (int i = 1; i <= this.fronts.size(); i++) {
+        for (int i = 0; i < this.fronts.size(); i++) {
             for (ChromoImSeg chromosome : this.fronts.get(i)) {
-                rankMap.put(chromosome, i);
+                rankMap.put(chromosome, i + 1);
             }
         }
         this.rankMap = Collections.unmodifiableMap(rankMap);

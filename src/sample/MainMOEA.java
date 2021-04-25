@@ -4,6 +4,8 @@ import collections.Image;
 import collections.Segment;
 import ga.GeneticAlgorithmRunner;
 import ga.RandomUtil;
+import ga.nsga2.ParentSelectorMOEA;
+import ga.nsga2.SurvivorSelectorMOEA;
 import javafx.application.Application;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
@@ -28,7 +30,7 @@ import java.util.Set;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public class Main extends Application {
+public class MainMOEA extends Application {
 
     private static final int
             SCREEN_WIDTH = 1280,
@@ -52,12 +54,12 @@ public class Main extends Application {
         ProblemImSeg problem = ImSegFiles.ReadImSegProblem("./res/training_images/86016/Test image.jpg");
         System.out.println("Problem reading took: " + (System.nanoTime() - start)/1000000 + "ms");
         GeneticAlgorithmRunner<ProblemImSeg, PopulationImSeg, ChromoImSeg> gaRunner = new GeneticAlgorithmRunner<>(
-                new Breeder(problem, 1, 50),
+                new Breeder(problem, 1, 15),
                 new UniformCrossoverer(0.5f),
                 new MutatorImSeg(0.7f),
-                new TournamentSelection(10, 4),
-                new CrowdingSelector(problem, 10),
-                60
+                new ParentSelectorMOEA(10, 2),
+                new SurvivorSelectorMOEA(),
+                50
         );
 
         Image image = problem.getImage();

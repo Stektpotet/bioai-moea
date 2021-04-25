@@ -18,6 +18,11 @@ public class DefaultHashMap<TKey, TValue> extends HashMap<TKey, TValue> {
     @Override
     public TValue get(Object key) {
         TValue value = super.get(key);
-        return (value != null) ? value : put((TKey) key, defaultValueSupplier.get());
+        if (value == null) {
+            final TValue newEntry = defaultValueSupplier.get();
+            this.put((TKey) key, newEntry);
+            return newEntry;
+        }
+        return value;
     }
 }
