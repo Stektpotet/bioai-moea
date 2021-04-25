@@ -1,6 +1,8 @@
 package evaluator;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,8 +19,8 @@ import javafx.scene.image.PixelReader;
  * You will need to implement the FeedbackStation interface yourselves.
  */
 public final class Evaluator implements Runnable{
-    String optFolder = "EVALUATOR/optimal/blackWhite/";
-    String studFolder = "EVALUATOR/student/blackWhite/";
+    String optFolder = "./res/training_images/86016/blackWhite/";
+    String studFolder = "./sol/86016/blackWhite/";
 
     final double colorValueSlackRange = 40.0/255.0;
     final double blackValueThreshold = 100.0/255.0;
@@ -44,14 +46,18 @@ public final class Evaluator implements Runnable{
     public void run() {
         updateOptimalFiles();
         updateStudentFiles();
-        updateImageLists();
+        try {
+            updateImageLists();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
         double[] scores = evaluate();
         Platform.runLater(()->{
             //feedbackStation.registerScores(scores);
         });
     }
 
-    public double[] runSameThread(){
+    public double[] runSameThread() throws FileNotFoundException {
         updateOptimalFiles();
         updateStudentFiles();
         updateImageLists();
@@ -130,7 +136,7 @@ public final class Evaluator implements Runnable{
         files.addAll(Arrays.asList(dir.listFiles()));
         File[] ordered = new File[files.size()];
         for(File f : files){
-            String lastPart = f.getName().split("_")[2];
+            String lastPart = f.getName().split("_")[1];
             int num = Integer.parseInt(lastPart.substring(0, lastPart.length()-4));
             ordered[num] = f;
         }
@@ -146,14 +152,20 @@ public final class Evaluator implements Runnable{
         studFiles = getFilesInDir(studFolder);
     }
 
-    private void updateImageLists(){
+    private void updateImageLists() throws FileNotFoundException {
         optImages.clear();
         for(File f : optFiles){
-            optImages.add(new Image(f.toURI().toString(), false)); // true is for background loading
+            var img = new Image(
+                    new FileInputStream(f.getAbsolutePath())
+            );
+            optImages.add(img); // true is for background loading
         }
         studImages.clear();
         for(File f : studFiles){
-            studImages.add(new Image(f.toURI().toString(), false)); // true is for background loading
+            var img = new Image(
+                    new FileInputStream(f.getAbsolutePath())
+            );
+            studImages.add(img); // true is for background loading
         }
     }
 }
