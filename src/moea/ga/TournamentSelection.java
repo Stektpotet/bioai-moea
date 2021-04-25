@@ -9,13 +9,13 @@ import moea.UtilChromoImSeg;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TournamentSelection implements ga.selection.ParentSelector<ProblemImSeg, ChromoImSeg> {
+public class TournamentSelection implements ga.selection.ParentSelector<ProblemImSeg, PopulationImSeg, ChromoImSeg> {
 
     private final int numParents;
     private final int tournamentSize;
 
     @Override
-    public List<ChromoImSeg> select(Population<ProblemImSeg, ChromoImSeg> population) throws Exception {
+    public List<ChromoImSeg> select(PopulationImSeg population) throws Exception {
         if (population.size() < tournamentSize) {
             throw new Exception("Not enough individuals for the tournament found in the population!");
         }

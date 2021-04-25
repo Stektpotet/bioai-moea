@@ -22,8 +22,7 @@ public class SurvivorSelectorMOEA implements SurvivorSelector<ProblemImSeg, Popu
         poolIndividuals.addAll(generation);
         poolIndividuals.addAll(offspring);
         PopulationImSeg selectionPool = new PopulationImSeg(problem, poolIndividuals);
-        ParetoImSeg sorted = NSGA2.FastNonDominatedSort(
-                selectionPool, (a, b) -> UtilChromoImSeg.dominates(problem, a, b));
+        ParetoImSeg sorted = NSGA2.FastNonDominatedSort(selectionPool);
 
 
         List<ChromoImSeg> nextGeneration = new ArrayList<>(size);

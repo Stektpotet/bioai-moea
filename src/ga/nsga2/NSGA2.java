@@ -4,6 +4,7 @@ import collections.DefaultHashMap;
 import collections.ParetoImSeg;
 import moea.ChromoImSeg;
 import moea.ProblemImSeg;
+import moea.UtilChromoImSeg;
 import moea.ga.PopulationImSeg;
 
 import java.util.*;
@@ -12,8 +13,9 @@ import java.util.stream.Collectors;
 
 public class NSGA2 {
 
-    public static ParetoImSeg FastNonDominatedSort(PopulationImSeg solutions, Comparator<ChromoImSeg> domination) {
+    public static ParetoImSeg FastNonDominatedSort(PopulationImSeg solutions) {
 
+        final ProblemImSeg problem = solutions.getProblem();
         // Replace the DefaultHashMap with HashMap and check component existence
         DefaultHashMap<Integer, List<Integer>> rankSortedFronts =  new DefaultHashMap<>(ArrayList::new);
         DefaultHashMap<Integer, Set<Integer>> dominatedBy = new DefaultHashMap<>(HashSet::new);
@@ -23,7 +25,7 @@ public class NSGA2 {
         // 1. Compute domination relations between all solutions and pick out first front
         for (int p = 0; p < solutions.size(); p++) {
             for (int q = p + 1; q < solutions.size(); q++) {
-                int pqDomination = domination.compare(solutions.get(p), solutions.get(q));
+                int pqDomination = UtilChromoImSeg.dominates(problem, solutions.get(p), solutions.get(q));
                 if (pqDomination > 0) {
                     dominatedBy.get(p).add(q);  // P dominates Q
                     dominates[q]++;             // increase number of solutions dominating Q

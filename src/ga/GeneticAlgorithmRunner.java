@@ -13,20 +13,20 @@ import javafx.concurrent.Task;
 import java.util.List;
 import java.util.stream.IntStream;
 
-public class GeneticAlgorithmRunner<ProblemT, Pop extends Population<ProblemT, C>, C  extends Chromosome<ProblemT>> extends Service<GeneticAlgorithmSnapshot<C>> {
+public class GeneticAlgorithmRunner<TProblem, TPop extends Population<TProblem, TChromo>, TChromo extends Chromosome<TProblem>> extends Service<GeneticAlgorithmSnapshot<TChromo>> {
 
-    private Initializer<ProblemT, Pop, C> initializer;
-    private Recombinator<C> recombinator;
-    private Mutator<ProblemT, C> mutator;
-    private ParentSelector<ProblemT, C> parentSelector;
-    private SurvivorSelector<ProblemT, Pop, C> survivorSelector;
+    private final Initializer<TProblem, TPop, TChromo> initializer;
+    private final Recombinator<TChromo> recombinator;
+    private final Mutator<TProblem, TChromo> mutator;
+    private final ParentSelector<TProblem, TPop, TChromo> parentSelector;
+    private final SurvivorSelector<TProblem, TPop, TChromo> survivorSelector;
     private final int populationSize;
 
-    public GeneticAlgorithmRunner(Initializer<ProblemT, Pop, C> initializer,
-                            Recombinator<C> recombinator,
-                            Mutator<ProblemT, C> mutator,
-                            ParentSelector<ProblemT, C> parentSelector,
-                            SurvivorSelector<ProblemT, Pop, C> survivorSelector, int populationSize) {
+    public GeneticAlgorithmRunner(Initializer<TProblem, TPop, TChromo> initializer,
+                                  Recombinator<TChromo> recombinator,
+                                  Mutator<TProblem, TChromo> mutator,
+                                  ParentSelector<TProblem, TPop, TChromo> parentSelector,
+                                  SurvivorSelector<TProblem, TPop, TChromo> survivorSelector, int populationSize) {
         this.initializer = initializer;
         this.recombinator = recombinator;
         this.mutator = mutator;
@@ -36,13 +36,13 @@ public class GeneticAlgorithmRunner<ProblemT, Pop extends Population<ProblemT, C
     }
 
     @Override
-    protected Task<GeneticAlgorithmSnapshot<C>> createTask() {
+    protected Task<GeneticAlgorithmSnapshot<TChromo>> createTask() {
         return new Task<>() {
             @Override
-            protected GeneticAlgorithmSnapshot<C> call() throws Exception {
+            protected GeneticAlgorithmSnapshot<TChromo> call() throws Exception {
                 System.out.println("Starting GA...");
                 var start = System.nanoTime();
-                Pop pop = initializer.breed(populationSize);
+                TPop pop = initializer.breed(populationSize);
                 System.out.println("Breeding took: " + (System.nanoTime() - start)/1000000 + "ms");
                 var generationCounter = IntStream.iterate(0, i -> i + 1).iterator();
 
@@ -52,10 +52,10 @@ public class GeneticAlgorithmRunner<ProblemT, Pop extends Population<ProblemT, C
                     start = System.nanoTime();
                     Integer i = generationCounter.next();
                     System.out.println("Doing generation #" + i);
-                    List<C> parents = parentSelector.select(pop);
-                    List<C> offspring = mutator.mutateAll(recombinator.recombine(parents));
+                    List<TChromo> parents = parentSelector.select(pop);
+                    List<TChromo> offspring = mutator.mutateAll(recombinator.recombine(parents));
                     pop = survivorSelector.select(pop, parents, offspring);
-                    C optimum = pop.getOptimum();
+                    TChromo optimum = pop.getOptimum();
                     updateValue(new GeneticAlgorithmSnapshot<>(i, optimum));
                     System.out.println("Generation #" + i + " took: " + (System.nanoTime() - start)/1000000 + "ms");
                 }
