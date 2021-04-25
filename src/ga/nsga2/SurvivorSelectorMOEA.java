@@ -14,7 +14,8 @@ import java.util.List;
 public class SurvivorSelectorMOEA implements SurvivorSelector<ProblemImSeg, PopulationImSeg, ChromoImSeg> {
 
     @Override
-    public PopulationImSeg select(PopulationImSeg generation, List<ChromoImSeg> parents, List<ChromoImSeg> offspring) {
+    public PopulationImSeg select(final PopulationImSeg generation, final List<ChromoImSeg> parents,
+                                  final List<ChromoImSeg> offspring) {
         int size = generation.size();
         ProblemImSeg problem = generation.getProblem();
 

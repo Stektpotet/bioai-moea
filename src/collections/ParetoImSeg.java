@@ -32,4 +32,12 @@ public class ParetoImSeg {
     public double getCrowdingDistance(ChromoImSeg chromosome) {
         return crowdingDistances.get(chromosome);
     }
+
+    public double compare(ChromoImSeg one, ChromoImSeg other) {
+        int rankComparison = getFrontRank(one) - getFrontRank(other);
+        if (rankComparison == 0) {
+            return getCrowdingDistance(one) - getCrowdingDistance(other);
+        }
+        return rankComparison;
+    }
 }
