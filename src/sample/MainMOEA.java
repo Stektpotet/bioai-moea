@@ -44,8 +44,8 @@ public class MainMOEA extends Application {
                 241, 161, true, false
         );
         ImageView imgView = new ImageView(previewImg);
-        ImageView groundTruthImageView = new ImageView(previewImg);
-        Group root = new Group(imgView, groundTruthImageView);
+        ImageView trainingImageView = new ImageView(previewImg);
+        Group root = new Group(imgView, trainingImageView);
         Scene scene = new Scene(root, SCREEN_WIDTH, SCREEN_HEIGHT, Color.BLACK);
         primaryStage.setResizable(false);
         primaryStage.setScene(scene);
@@ -63,38 +63,33 @@ public class MainMOEA extends Application {
         );
 
         Image image = problem.getImage();
-        int[] groundTruthImageRaw = new int[image.getPixelCount()];
-        groundTruthImageView.getImage().getPixelReader().getPixels(
-                0, 0, image.getWidth(), image.getHeight(),
-                PixelFormat.getIntArgbPreInstance(), groundTruthImageRaw,
-                0, image.getWidth()
-        );
+        int[] trainingImageRaw = ImageUtil.readImage(trainingImageView.getImage());
 
         gaRunner.valueProperty().addListener( (obs, oldSnap, newSnap) -> {
             List<Segment> segments = newSnap.optimum.getPhenotype(problem);
             WritableImage segmentImg = new WritableImage(image.getWidth(), image.getHeight());
-
-            int[] segmentImgRaw = groundTruthImageRaw.clone();
-
-            for (Segment segment : segments) {
-                for (var p : segment.getEdge()) {
-                    segmentImgRaw[p] = 0x0000ff00; // green
-                }
-            }
-
-            segmentImg.getPixelWriter().setPixels(
-                    0, 0, image.getWidth(), image.getHeight(),
-                    PixelFormat.getIntArgbPreInstance(), segmentImgRaw, 0, image.getWidth()
-            );
+            int[] traced = ImageUtil.traceSegmentsOnto(trainingImageRaw, segments);
+            ImageUtil.writeImage(segmentImg, traced);
             imgView.setImage(segmentImg);
+        });
+
+        primaryStage.setOnCloseRequest(event -> {
+//            long diff = (System.currentTimeMillis()-start);
+//            System.out.println(String.format("Ended after %02d:%02d", (diff / (1000 * 60)) % 60, (diff / 1000) % 60));
+//          TODO: Save aside current optimum
+
+//            SAVE SCREENSHOT of the application running
+//            WritableImage snapshot = root.snapshot(null, null);
+//            Img.WriteImg(snapshot, String.format("solutions/%s.png", problem.getName()));
+
         });
 
 //        imgView.setOpacity(0.1);
         imgView.setFitWidth(SCREEN_WIDTH * .5);
         imgView.setFitHeight(SCREEN_HEIGHT * .5);
-        groundTruthImageView.setFitWidth(SCREEN_WIDTH * .5);
-        groundTruthImageView.setFitHeight(SCREEN_HEIGHT * .5);
-        groundTruthImageView.setX(SCREEN_WIDTH * .5);
+        trainingImageView.setFitWidth(SCREEN_WIDTH * .5);
+        trainingImageView.setFitHeight(SCREEN_HEIGHT * .5);
+        trainingImageView.setX(SCREEN_WIDTH * .5);
         primaryStage.show();
 
         gaRunner.start();
