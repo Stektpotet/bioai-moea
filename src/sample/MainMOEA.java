@@ -56,7 +56,7 @@ public class MainMOEA extends Application {
         primaryStage.setScene(scene);
 
         var start = System.nanoTime();
-        //TODO make main takt the image code
+        //TODO make main take the image code
         ProblemImSeg problem = ImSegFiles.ReadImSegProblem("./res/training_images/118035/Test image.jpg");
         System.out.println("Problem reading took: " + (System.nanoTime() - start)/1000000 + "ms");
         GeneticAlgorithmRunner<ProblemImSeg, PopulationImSeg, ChromoImSeg> gaRunner = new GeneticAlgorithmRunner<>(
@@ -93,13 +93,12 @@ public class MainMOEA extends Application {
                 ImageUtil.fillImage(img, 0xffffffff);
                 ImageUtil.traceSegmentsOnto(img,  optima.get(i).getPhenotype(problem), 0);
 
+            }
                 try {
-                    ImageUtil.writeToFile(problem, ImageUtil.readImageRaw(img));
+                    ImageUtil.writeFrontToFiles("./sol/118035/blackWhite/", paretoOptimalImgs);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
-            }
 
 //            long diff = (System.currentTimeMillis()-start);
 //            System.out.println(String.format("Ended after %02d:%02d", (diff / (1000 * 60)) % 60, (diff / 1000) % 60));

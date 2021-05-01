@@ -4,7 +4,6 @@ import collections.Segment;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.WritableImage;
-import moea.ProblemImSeg;
 
 import javax.imageio.ImageIO;
 import java.awt.image.*;
@@ -19,8 +18,10 @@ public class ImageUtil {
     public static int[] traceSegments(final int[] rawImage, final Collection<Segment> segments) {
         return traceSegments(rawImage, segments, 0x00ff00);
     }
+
+
     public static int[] traceSegments(final int[] rawImage, final Collection<Segment> segments, final int color) {
-        int[] tracedRawImage = rawImage.clone();
+        final int[] tracedRawImage = rawImage.clone();
         for (Segment segment : segments) {
             for (var p : segment.getEdge()) {
                 tracedRawImage[p] = color;
@@ -85,19 +86,30 @@ public class ImageUtil {
         return buffer;
     }
 
-    public static void writeToFile(ProblemImSeg problem, int[] rgb_ints) throws IOException {
-        DataBuffer rgbData = new DataBufferInt(rgb_ints, rgb_ints.length);
+    public static void writeToFile(final Image image, final String directoryPath, final String name) throws IOException {
+        final int[] rgbInts = readImageRaw(image);
+        final int width = (int) image.getWidth();
+        final int height = (int) image.getHeight();
+        final DataBuffer rgbData = new DataBufferInt(rgbInts, rgbInts.length);
 
-        WritableRaster raster = Raster.createPackedRaster(rgbData, problem.getWith(),
-                problem.getPixelCount() / problem.getWith(), problem.getWith(),
+        final WritableRaster raster = Raster.createPackedRaster(rgbData, width,
+                height, width,
                 new int[]{0xff0000, 0xff00, 0xff}, null);
 
-        ColorModel colorModel = new DirectColorModel(24, 0xff0000, 0xff00, 0xff);
+        final ColorModel colorModel = new DirectColorModel(24, 0xff0000, 0xff00, 0xff);
 
-        BufferedImage img = new BufferedImage(colorModel, raster, false, null);
+        final BufferedImage img = new BufferedImage(colorModel, raster, false, null);
+        final File directory = new File(directoryPath);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+        ImageIO.write(img, "png", new File(directoryPath + name));
+    }
 
-        String fname = "test.png";
-        ImageIO.write(img, "png", new File(fname));
+    public static void writeFrontToFiles(final String pathToFolder, final Image[] front) throws IOException {
+        for (int i = 0; i < front.length; i++) {
+            writeToFile(front[i], pathToFolder, "pareto_" + i + ".png");
+        }
     }
 }
 
