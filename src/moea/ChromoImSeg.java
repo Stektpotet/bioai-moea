@@ -117,7 +117,8 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
             }
         }
         fitnessOutdated = false;
-        return new Fitness(edge, deviation, connectivity);
+        fitness = new Fitness(edge, deviation, connectivity);
+        return fitness;
     }
 
     private List<Segment> phenotype(ProblemImSeg problem) {
