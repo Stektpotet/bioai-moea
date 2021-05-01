@@ -9,6 +9,7 @@ import java.util.List;
 import javafx.application.Platform;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelReader;
+import sample.FeedbackStation;
 
 /**
  * How to use:
@@ -19,8 +20,8 @@ import javafx.scene.image.PixelReader;
  * You will need to implement the FeedbackStation interface yourselves.
  */
 public final class Evaluator implements Runnable{
-    String optFolder = "./res/training_images/86016/blackWhite/";
-    String studFolder = "./sol/86016/blackWhite/";
+    String optFolder;
+    String studFolder;
 
     final double colorValueSlackRange = 40.0/255.0;
     final double blackValueThreshold = 100.0/255.0;
@@ -32,14 +33,16 @@ public final class Evaluator implements Runnable{
     List<Image> optImages;
     List<Image> studImages;
 
-    //private final FeedbackStation feedbackStation;
+    private final FeedbackStation feedbackStation;
 
-    public Evaluator(/*FeedbackStation feedbackStation*/){
-        //this.feedbackStation = feedbackStation;
+    public Evaluator(String optFolder, String studFolder, FeedbackStation feedbackStation){
+        this.feedbackStation = feedbackStation;
         optFiles = new ArrayList<>();
         studFiles = new ArrayList<>();
         optImages = new ArrayList<>();
         studImages = new ArrayList<>();
+        this.optFolder = optFolder;
+        this.studFolder = studFolder;
     }
 
     @Override
@@ -53,7 +56,7 @@ public final class Evaluator implements Runnable{
         }
         double[] scores = evaluate();
         Platform.runLater(()->{
-            //feedbackStation.registerScores(scores);
+            feedbackStation.registerScores(scores);
         });
     }
 
