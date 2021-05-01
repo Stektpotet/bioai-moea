@@ -2,6 +2,7 @@ package sample;
 
 import collections.Image;
 import ga.GeneticAlgorithmRunner;
+import ga.GeneticAlgorithmSnapshot;
 import ga.nsga2.ParentSelectorMOEA;
 import ga.nsga2.SurvivorSelectorMOEA;
 import javafx.application.Application;
@@ -17,6 +18,7 @@ import moea.ProblemImSeg;
 import moea.ga.*;
 
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.List;
 
 public class MainMOEA extends Application {
@@ -31,10 +33,10 @@ public class MainMOEA extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         primaryStage.setTitle("MOEA Image Segmentation");
-        var previewImg = new javafx.scene.image.Image(
-                new FileInputStream("./res/training_images/118035/Test image.jpg"),
-                241, 161, true, false
-        );
+//        var previewImg = new javafx.scene.image.Image(
+//                new FileInputStream("./res/training_images/118035/Test image.jpg"),
+//                241, 161, true, false
+//        );
         ImageView[] paretoOptimalPreviews = new ImageView[NUM_PREVIEW_IMAGES];
         WritableImage[] paretoOptimalImgs = new WritableImage[NUM_PREVIEW_IMAGES];
         for (int i = 0; i < NUM_PREVIEW_IMAGES; i++) {
@@ -54,6 +56,7 @@ public class MainMOEA extends Application {
         primaryStage.setScene(scene);
 
         var start = System.nanoTime();
+        //TODO make main takt the image code
         ProblemImSeg problem = ImSegFiles.ReadImSegProblem("./res/training_images/118035/Test image.jpg");
         System.out.println("Problem reading took: " + (System.nanoTime() - start)/1000000 + "ms");
         GeneticAlgorithmRunner<ProblemImSeg, PopulationImSeg, ChromoImSeg> gaRunner = new GeneticAlgorithmRunner<>(
@@ -70,8 +73,7 @@ public class MainMOEA extends Application {
         gaRunner.valueProperty().addListener( (obs, oldSnap, newSnap) -> {
             List<ChromoImSeg> optima = newSnap.optima;
             int segmentationsToShow = Math.min(optima.size(), 5);
-            int i = 0;
-            for (ImageView imgView : paretoOptimalPreviews) {
+            for (int i = 0; i < paretoOptimalImgs.length; i++) {
                 if (i >= segmentationsToShow) {
                     ImageUtil.clearImage(paretoOptimalImgs[i]);
                     continue;
@@ -79,11 +81,26 @@ public class MainMOEA extends Application {
                 int[] traced = ImageUtil.traceSegments(trainingImageRaw, optima.get(i).getPhenotype(problem));
                 ImageUtil.writeImage(paretoOptimalImgs[i], traced);
                 paretoOptimalPreviews[i].setImage(paretoOptimalImgs[i]);
-                i++;
             }
         });
 
         primaryStage.setOnCloseRequest(event -> {
+            GeneticAlgorithmSnapshot<ChromoImSeg> stateSnapshot = gaRunner.valueProperty().get();
+            List<ChromoImSeg> optima = stateSnapshot.optima;
+            int segmentationsToShow = Math.min(optima.size(), 5);
+            for (int i = 0; i < segmentationsToShow; i++) {
+                var img = paretoOptimalImgs[i];
+                ImageUtil.fillImage(img, 0xffffffff);
+                ImageUtil.traceSegmentsOnto(img,  optima.get(i).getPhenotype(problem), 0);
+
+                try {
+                    ImageUtil.writeToFile(problem, ImageUtil.readImageRaw(img));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+
 //            long diff = (System.currentTimeMillis()-start);
 //            System.out.println(String.format("Ended after %02d:%02d", (diff / (1000 * 60)) % 60, (diff / 1000) % 60));
 //          TODO: Save aside current optimum

@@ -10,9 +10,11 @@ import javax.imageio.ImageIO;
 import java.awt.image.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 
 public class ImageUtil {
+
 
     public static int[] traceSegments(final int[] rawImage, final Collection<Segment> segments) {
         return traceSegments(rawImage, segments, 0x00ff00);
@@ -61,11 +63,21 @@ public class ImageUtil {
                 PixelFormat.getIntArgbPreInstance(), new int[width * height], 0, width
         );
     }
-
-    public static int[] readImage(final Image img) {
+    public static void fillImage(final WritableImage img, int color) {
         final int width = (int) img.getWidth();
         final int height = (int) img.getHeight();
-        int[] buffer = new int[width * height];
+        final int[] buffer = new int[width * height];
+        Arrays.fill(buffer, color);
+        img.getPixelWriter().setPixels(
+                0, 0, width, height,
+                PixelFormat.getIntArgbPreInstance(), buffer, 0, width
+        );
+    }
+
+    public static int[] readImageRaw(final Image img) {
+        final int width = (int) img.getWidth();
+        final int height = (int) img.getHeight();
+        final int[] buffer = new int[width * height];
         img.getPixelReader().getPixels(
                 0, 0, width, height,
                 PixelFormat.getIntArgbPreInstance(), buffer, 0, width
