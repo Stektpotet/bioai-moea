@@ -61,6 +61,8 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
     public List<Segment> getPhenotype (ProblemImSeg problem) {
         if (phenoOutdated) {
             phenotype(problem);
+            phenoOutdated = false;
+            fitnessOutdated = true;
         }
         return phenotype;
     }
@@ -73,6 +75,7 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
     public double fitness(ProblemImSeg problem) {
         if (phenoOutdated) {
             phenotype(problem);
+            phenoOutdated = false;
             fitnessOutdated = true;
         }
         if (fitnessOutdated) {
@@ -85,6 +88,7 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
     public Fitness calculateFitnessComponents(ProblemImSeg problem) {
         if (phenoOutdated) {
             phenotype(problem);
+            phenoOutdated = false;
             fitnessOutdated = true;
         }
         if (!fitnessOutdated) {
@@ -112,10 +116,11 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
                 }
             }
         }
+        fitnessOutdated = false;
         return new Fitness(edge, deviation, connectivity);
     }
 
-    List<Segment> phenotype(ProblemImSeg problem) {
+    private List<Segment> phenotype(ProblemImSeg problem) {
         if (!phenoOutdated) {
             return phenotype;
         }
