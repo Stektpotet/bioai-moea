@@ -1,6 +1,7 @@
 package sample;
 
 import collections.Image;
+import evaluator.Evaluator;
 import ga.GeneticAlgorithmRunner;
 import ga.GeneticAlgorithmSnapshot;
 import ga.nsga2.ParentSelectorMOEA;
@@ -32,6 +33,13 @@ public class MainMOEA extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+
+        // FeedbackStation feedbackStation = new FeedbackStation();
+        // Evaluator evaluator = new Evaluator("./res/training_images/86016/blackWhite/",
+           //     "./sol/86016/blackWhite/", feedbackStation);
+        // new Thread(evaluator).start();
+
+
         primaryStage.setTitle("MOEA Image Segmentation");
 
         ImageView[] paretoOptimalPreviews = new ImageView[NUM_PREVIEW_IMAGES];
