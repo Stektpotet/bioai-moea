@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 public class ImageUtil {
 
@@ -86,10 +87,8 @@ public class ImageUtil {
         return buffer;
     }
 
-    public static void writeToFile(final Image image, final String directoryPath, final String name) throws IOException {
-        final int[] rgbInts = readImageRaw(image);
-        final int width = (int) image.getWidth();
-        final int height = (int) image.getHeight();
+
+    public static void writeToFile(final int[] rgbInts, int width, int height, final String directoryPath, final String name) throws IOException {
         final DataBuffer rgbData = new DataBufferInt(rgbInts, rgbInts.length);
 
         final WritableRaster raster = Raster.createPackedRaster(rgbData, width,
@@ -105,8 +104,17 @@ public class ImageUtil {
         }
         ImageIO.write(img, "png", new File(directoryPath + name));
     }
+    public static void writeToFile(final Image image, final String directoryPath, final String name) throws IOException {
+        writeToFile(readImageRaw(image), (int) image.getWidth(), (int) image.getHeight(), directoryPath, name);
+    }
 
-    public static void writeFrontToFiles(final String pathToFolder, final Image[] front) throws IOException {
+    public static void writeImagesToFiles(final String pathToFolder, final int[][] front, int width, int height) throws IOException {
+        for (int i = 0; i < front.length; i++) {
+            writeToFile(front[i], width, height, pathToFolder, "pareto_" + i + ".png");
+        }
+    }
+
+    public static void writeImagesToFiles(final String pathToFolder, final Image[] front) throws IOException {
         for (int i = 0; i < front.length; i++) {
             writeToFile(front[i], pathToFolder, "pareto_" + i + ".png");
         }
