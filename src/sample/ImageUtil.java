@@ -4,7 +4,12 @@ import collections.Segment;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.WritableImage;
+import moea.ProblemImSeg;
 
+import javax.imageio.ImageIO;
+import java.awt.image.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 
 public class ImageUtil {
@@ -66,6 +71,21 @@ public class ImageUtil {
                 PixelFormat.getIntArgbPreInstance(), buffer, 0, width
         );
         return buffer;
+    }
+
+    public static void writeToFile(ProblemImSeg problem, int[] rgb_ints) throws IOException {
+        DataBuffer rgbData = new DataBufferInt(rgb_ints, rgb_ints.length);
+
+        WritableRaster raster = Raster.createPackedRaster(rgbData, problem.getWith(),
+                problem.getPixelCount() / problem.getWith(), problem.getWith(),
+                new int[]{0xff0000, 0xff00, 0xff}, null);
+
+        ColorModel colorModel = new DirectColorModel(24, 0xff0000, 0xff00, 0xff);
+
+        BufferedImage img = new BufferedImage(colorModel, raster, false, null);
+
+        String fname = "test.png";
+        ImageIO.write(img, "png", new File(fname));
     }
 }
 
