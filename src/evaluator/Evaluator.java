@@ -6,10 +6,10 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import javafx.application.Platform;
+
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelReader;
-import sample.FeedbackStation;
+import javafx.concurrent.Task;
 
 /**
  * How to use:
@@ -19,7 +19,7 @@ import sample.FeedbackStation;
  * the "feedbackStation" object, wrapping this object in a Thread object, then calling start() on that thread.
  * You will need to implement the FeedbackStation interface yourselves.
  */
-public final class Evaluator implements Runnable{
+public final class Evaluator extends Task<double[]> {         // mad boob
     String optFolder;
     String studFolder;
 
@@ -33,10 +33,8 @@ public final class Evaluator implements Runnable{
     List<Image> optImages;
     List<Image> studImages;
 
-    private final FeedbackStation feedbackStation;
 
-    public Evaluator(String optFolder, String studFolder, FeedbackStation feedbackStation){
-        this.feedbackStation = feedbackStation;
+    public Evaluator(String optFolder, String studFolder){
         optFiles = new ArrayList<>();
         studFiles = new ArrayList<>();
         optImages = new ArrayList<>();
@@ -46,7 +44,7 @@ public final class Evaluator implements Runnable{
     }
 
     @Override
-    public void run() {
+    protected double[] call() {
         updateOptimalFiles();
         updateStudentFiles();
         try {
@@ -54,10 +52,7 @@ public final class Evaluator implements Runnable{
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        double[] scores = evaluate();
-        Platform.runLater(()->{
-            feedbackStation.registerScores(scores);
-        });
+        return evaluate();
     }
 
     public double[] runSameThread() throws FileNotFoundException {

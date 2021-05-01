@@ -13,12 +13,14 @@ import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
+import javafx.scene.text.*;
 import javafx.stage.Stage;
 import moea.ChromoImSeg;
 import moea.ImSegFiles;
 import moea.ProblemImSeg;
 import moea.ga.*;
 
+import java.beans.EventHandler;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -32,39 +34,17 @@ public class MainMOEA extends Application {
             IMAGE_HEIGHT    = 161,
             NUM_PREVIEW_IMAGES = 5,
             SCALING_FACTOR  = 2,
-            SCREEN_WIDTH    = IMAGE_WIDTH * SCALING_FACTOR * 3,
-            SCREEN_HEIGHT   = IMAGE_HEIGHT * SCALING_FACTOR * 2; //(int)(1280/1.49689440994); // Aspect Ratio of image
+            HORIZONTAL_PREVIEWS = 3,
+            VERTICAL_PREVIEWS = 2,
+            SCREEN_WIDTH    = IMAGE_WIDTH * SCALING_FACTOR * HORIZONTAL_PREVIEWS,
+            SCREEN_HEIGHT   = IMAGE_HEIGHT * SCALING_FACTOR * VERTICAL_PREVIEWS;
+
+    private static final int IMAGE_CODE = 118035;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-
-        FeedbackStation feedbackStation = new FeedbackStation();
-        Evaluator evaluator = new Evaluator("./res/training_images/86016/blackWhite/",
-                "./sol/86016/blackWhite/", feedbackStation);
-
-
-        primaryStage.setTitle("MOEA Image Segmentation");
-
-        ImageView[] paretoOptimalPreviews = new ImageView[NUM_PREVIEW_IMAGES];
-        WritableImage[] paretoOptimalImgs = new WritableImage[NUM_PREVIEW_IMAGES];
-        for (int i = 0; i < NUM_PREVIEW_IMAGES; i++) {
-            paretoOptimalImgs[i] = new WritableImage(IMAGE_WIDTH, IMAGE_HEIGHT);
-            paretoOptimalPreviews[i] = new ImageView(paretoOptimalImgs[i]);
-
-            paretoOptimalPreviews[i].setFitWidth(IMAGE_WIDTH * SCALING_FACTOR);
-            paretoOptimalPreviews[i].setFitHeight(IMAGE_HEIGHT * SCALING_FACTOR);
-            paretoOptimalPreviews[i].setX(IMAGE_WIDTH * SCALING_FACTOR * (i % 3));
-            paretoOptimalPreviews[i].setY(IMAGE_HEIGHT * SCALING_FACTOR * (i / 3));
-            System.out.println(IMAGE_WIDTH * SCALING_FACTOR * (i % 3) + ", " + IMAGE_HEIGHT * SCALING_FACTOR * (i / 3));
-        }
-
-
-        Group root = new Group(paretoOptimalPreviews);
-
-        Scene scene = new Scene(root, SCREEN_WIDTH, SCREEN_HEIGHT, Color.BLACK);
-
-        primaryStage.setResizable(false);
-        primaryStage.setScene(scene);
+        Evaluator evaluator = new Evaluator("./res/training_images/" + IMAGE_CODE + "/blackWhite/",
+                "./sol/" + IMAGE_CODE + "/blackWhite/"  );
 
         var start = System.nanoTime();
         //TODO make main take the image code
@@ -78,13 +58,39 @@ public class MainMOEA extends Application {
                 new SurvivorSelectorMOEA(),
                 50
         );
-        
+
         int[] trainingImageRaw = problem.getImage().rawImage();
+
+        primaryStage.setTitle("MOEA Image Segmentation");
+
+        ImageView[] paretoOptimalPreviews = new ImageView[NUM_PREVIEW_IMAGES];
+        WritableImage[] paretoOptimalImgs = new WritableImage[NUM_PREVIEW_IMAGES];
+        for (int i = 0; i < NUM_PREVIEW_IMAGES; i++) {
+            paretoOptimalImgs[i] = new WritableImage(IMAGE_WIDTH, IMAGE_HEIGHT);
+            paretoOptimalPreviews[i] = new ImageView(paretoOptimalImgs[i]);
+
+            paretoOptimalPreviews[i].setFitWidth(IMAGE_WIDTH * SCALING_FACTOR);
+            paretoOptimalPreviews[i].setFitHeight(IMAGE_HEIGHT * SCALING_FACTOR);
+            paretoOptimalPreviews[i].setX(IMAGE_WIDTH * SCALING_FACTOR * (i % HORIZONTAL_PREVIEWS));
+            paretoOptimalPreviews[i].setY(IMAGE_HEIGHT * SCALING_FACTOR * (i / HORIZONTAL_PREVIEWS));
+            System.out.println(IMAGE_WIDTH * SCALING_FACTOR * (i % 3) + ", " + IMAGE_HEIGHT * SCALING_FACTOR * (i / 3));
+        }
+
+        Text textPRI = new Text(IMAGE_WIDTH * SCALING_FACTOR * 2, IMAGE_HEIGHT * SCALING_FACTOR , "Put some PRI in me PLS!");
+        Group dataView = new Group(textPRI);
+//        dataView.setTranslateX();
+        Group root = new Group(paretoOptimalPreviews);
+        root.getChildren().add(dataView);
+
+        Scene scene = new Scene(root, SCREEN_WIDTH, SCREEN_HEIGHT, Color.BLACK);
+
+        primaryStage.setResizable(false);
+        primaryStage.setScene(scene);
 
         gaRunner.valueProperty().addListener((obs, oldSnap, newSnap) -> updateOptimaPreviews(paretoOptimalPreviews,
                 paretoOptimalImgs, problem, trainingImageRaw, newSnap.optima));
 
-        Button button = makeButton(evaluator, problem, gaRunner);
+        Button button = makeButton(problem, gaRunner);
         root.getChildren().add(button);
 
         gaRunner.valueProperty().addListener( (obs, oldSnap, newSnap) -> {
@@ -134,10 +140,10 @@ public class MainMOEA extends Application {
             Arrays.fill(buffers[i], WHITE);
             buffers[i] = ImageUtil.traceSegments(buffers[i], front.get(i).getPhenotype(problem), BLACK);
         }
-        ImageUtil.writeImagesToFiles("./sol/118035/blackWhite/", buffers, image.getWidth(), image.getHeight());
+        ImageUtil.writeImagesToFiles("./sol/" + IMAGE_CODE + "/blackWhite/", buffers, image.getWidth(), image.getHeight());
     }
 
-    private Button makeButton(Evaluator evaluator, ProblemImSeg problem,
+    private Button makeButton(ProblemImSeg problem,
                               GeneticAlgorithmRunner<ProblemImSeg, PopulationImSeg, ChromoImSeg> gaRunner) {
         Button button = new Button("Evaluate");
         button.setOnAction(actionEvent -> {
@@ -148,7 +154,18 @@ public class MainMOEA extends Application {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            new Thread(evaluator).start();
+            Evaluator evaluator = new Evaluator("./res/training_images/" + IMAGE_CODE + "/blackWhite/",
+                    "./sol/" + IMAGE_CODE + "/blackWhite/" );
+            evaluator.valueProperty().addListener(((observableValue, previous, current) -> {
+                if (current == null)
+                    return;
+                for (int i = 0; i < current.length; i++) {
+                    System.out.println("Segementation " + i + ": " + current[i]);
+                }
+            }));
+            Thread thread = new Thread(evaluator);
+            thread.setDaemon(true);
+            thread.start();
         });
         button.setLayoutY(SCREEN_HEIGHT / 2);
         button.setLayoutX(SCREEN_WIDTH / 3 * 2);
