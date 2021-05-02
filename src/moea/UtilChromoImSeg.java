@@ -10,7 +10,7 @@ public class UtilChromoImSeg {
     public static int hammingDistance(ChromoImSeg a, ChromoImSeg b) {
         int dist = 0;
         var genotypeA = a.cloneGenotype();
-        var genotypeB = a.cloneGenotype();
+        var genotypeB = b.cloneGenotype();
 
         for (int i = 0; i < genotypeA.length; i++) {
             dist += (genotypeA[i] == genotypeB[i]) ? 0 : 1;
