@@ -27,14 +27,19 @@ public class Segment {
             avgColor[1] += p.getGreen();
             avgColor[2] += p.getBlue();
 
-            boolean isEdge = false;
-            for (int mn : moores) {
-                //TODO: check if on the same side of the image!
-                if (!pixelIdx.contains(pid + mn)) {
-                    isEdge = true;
-                    break;
+            int px = pid % img.getWidth();
+            int py = pid / img.getWidth();
+            // if the pixel is at the edge of the image, it is a segment edge too!
+            boolean isEdge = (py == 0 || py == (img.getHeight() - 1) || px == 0 || (px == img.getWidth() - 1));
+            if (!isEdge) {
+                for (int mn : moores) {
+                    if (!pixelIdx.contains(pid + mn)) {
+                        isEdge = true;
+                        break;
+                    }
                 }
             }
+
             if (isEdge) {
                 edge.add(pid);
             } else {

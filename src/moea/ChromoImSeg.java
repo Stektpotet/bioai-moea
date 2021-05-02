@@ -138,6 +138,7 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
             return phenotype;
         }
 
+        final Image image = problem.getImage();
         RandomSet<Integer> unvisited = IntStream.range(0, genotype.length).collect(RandomSet::new, RandomSet::add, RandomSet::addAll);
         List<Set<Integer>> segmentation = new ArrayList<>();
 
@@ -151,7 +152,7 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
             Integer predecessor;
             while (true) {
                 predecessor = element;
-                element = pointsTo(problem, predecessor);
+                element = pointsTo(image, predecessor);
 
                 // Check if the segment does not already contain contain the element pointed to
                 if (!currentSegment.add(element)) {
@@ -182,7 +183,7 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
 
         List<Segment> segments = new ArrayList<>(segmentation.size());
         for (var protoSegment : segmentation) {
-            segments.add(new Segment(protoSegment, problem.getImage()));
+            segments.add(new Segment(protoSegment, image));
         }
 
         phenotype = Collections.unmodifiableList(segments);
@@ -191,9 +192,9 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
         return phenotype;
     }
 
-    private int pointsTo(ProblemImSeg image, int pixelIdx) {
+    private int pointsTo(Image image, int pixelIdx) {
         EdgeOut direction = genotype[pixelIdx];
-        int width = image.getWith();
+        int width = image.getWidth();
 
         int pointsTo;
         switch (direction) {
@@ -227,11 +228,6 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
         if (!(o instanceof ChromoImSeg)) {
             return false;
         }
-        ChromoImSeg other = (ChromoImSeg) o;
-        if (UtilChromoImSeg.hammingDistance(this, other) == 0) {
-            return true;
-        } else {
-            return false;
-        }
+        return UtilChromoImSeg.hammingDistance(this, (ChromoImSeg) o) == 0;
     }
 }

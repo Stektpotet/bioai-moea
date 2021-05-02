@@ -91,19 +91,6 @@ public class MainMOEA extends Application {
         Button button = makeButton(problem, gaRunner);
         root.getChildren().add(button);
 
-        gaRunner.valueProperty().addListener( (obs, oldSnap, newSnap) -> {
-            List<ChromoImSeg> optima = newSnap.optima;
-            int segmentationsToShow = Math.min(optima.size(), 5);
-            for (int i = 0; i < paretoOptimalImgs.length; i++) {
-                if (i >= segmentationsToShow) {
-                    ImageUtil.clearImage(paretoOptimalImgs[i]);
-                    continue;
-                }
-                int[] traced = ImageUtil.traceSegments(trainingImageRaw, optima.get(i).getPhenotype(problem));
-                ImageUtil.writeImage(paretoOptimalImgs[i], traced);
-                paretoOptimalPreviews[i].setImage(paretoOptimalImgs[i]);
-            }
-        });
 
         primaryStage.setOnCloseRequest(event -> {
             GeneticAlgorithmSnapshot<ChromoImSeg> stateSnapshot = gaRunner.valueProperty().get();
@@ -119,16 +106,17 @@ public class MainMOEA extends Application {
     }
     
     private void updateOptimaPreviews(ImageView[] paretoOptimalPreviews, WritableImage[] paretoOptimalImgs, ProblemImSeg problem, int[] trainingImageRaw, List<ChromoImSeg> optima) {
-        int segmentationsToShow = Math.min(optima.size(), 5);
+        ChromoImSeg[] optimaUnique = optima.stream().distinct().limit(NUM_PREVIEW_IMAGES).toArray(ChromoImSeg[]::new);
         for (int i = 0; i < paretoOptimalImgs.length; i++) {
-            if (i >= segmentationsToShow) {
+            if (i >= optimaUnique.length) {
                 ImageUtil.clearImage(paretoOptimalImgs[i]);
                 continue;
             }
-            int[] traced = ImageUtil.traceSegments(trainingImageRaw, optima.get(i).getPhenotype(problem));
+            int[] traced = ImageUtil.traceSegments(trainingImageRaw, optimaUnique[i].getPhenotype(problem));
             ImageUtil.writeImage(paretoOptimalImgs[i], traced);
             paretoOptimalPreviews[i].setImage(paretoOptimalImgs[i]);
         }
+
     }
 
     public static void saveParetoFrontPreview(ProblemImSeg problem, List<ChromoImSeg> front) throws IOException {
@@ -158,7 +146,8 @@ public class MainMOEA extends Application {
                 if (current == null)
                     return;
                 for (int i = 0; i < current.length; i++) {
-                    System.out.println("Segementation " + i + ": " + current[i]);
+                    if (current[i] > 0.7)
+                        System.out.println("Segementation " + i + ": " + current[i]);
                 }
             }));
             Thread thread = new Thread(evaluator);
