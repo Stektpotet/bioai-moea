@@ -4,6 +4,8 @@ import collections.Segment;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.WritableImage;
+import moea.ChromoImSeg;
+import moea.ProblemImSeg;
 
 import javax.imageio.ImageIO;
 import java.awt.image.*;
@@ -132,6 +134,17 @@ public class ImageUtil {
             }
         } catch (NullPointerException nullPointer) {
             throw new Exception("Directory " + pathToFolder + " doesn't exist!");
+        }
+    }
+
+    public static void write(final List<ChromoImSeg> chromosomes, ProblemImSeg problem, String directory) throws IOException {
+        int i = 0;
+        collections.Image image = problem.getImage();
+        int[] rawImage = image.rawImage();
+        for (ChromoImSeg chromoImSeg: chromosomes) {
+            int[] tracedImage = ImageUtil.traceSegments(rawImage, chromoImSeg.getPhenotype(problem));
+            ImageUtil.writeToFile(tracedImage, image.getWidth(), image.getHeight(), directory, i + ".png");
+            i++;
         }
     }
 }
