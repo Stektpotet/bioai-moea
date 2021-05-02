@@ -73,7 +73,7 @@ public class Breeder implements Initializer<ProblemImSeg, PopulationImSeg, Chrom
         // TODO: Split the MST into several segments
         var mst = mst(problem);
         // 3.
-        int numInitialSegments = minNumSegments + RandomUtil.random.nextInt(maxNumSegments - minNumSegments);
+        int numInitialSegments = minNumSegments + RandomUtil.random.nextInt(maxNumSegments - minNumSegments + 1);
 
         RandomUtil.random.ints(0, mst.length).limit(numInitialSegments).forEach(i -> {
             mst[i] = ChromoImSeg.EdgeOut.NONE;
