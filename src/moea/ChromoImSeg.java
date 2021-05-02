@@ -221,4 +221,17 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
         DOWN,
         NONE
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof ChromoImSeg)) {
+            return false;
+        }
+        ChromoImSeg other = (ChromoImSeg) o;
+        if (UtilChromoImSeg.hammingDistance(this, other) == 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
