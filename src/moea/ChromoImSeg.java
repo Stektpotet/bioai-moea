@@ -103,19 +103,30 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
 
         for (Segment segment : phenotype) {
             Set<Integer> allPixelsOfSegment = segment.getAll();
+
+            // calculate overall deviation for segment
             Pixel centroid = segment.getCentroid();
-            for (Integer pid : segment.getNonEdge()) {
+            for (Integer pid : allPixelsOfSegment) {
                 deviation += WEIGHT_OVDEV * image.getPixel(pid).distance(centroid);
             }
+            deviation /= allPixelsOfSegment.size();
+
+            // calculate edge value and connectivity for segment
+            double segmentEdge = 0;
+            int edgePixels = 0;
             for (Integer pid : segment.getEdge()) {
                 for (Graph.Edge neighbour : graph.getAdjacent(pid)) {
                     if (!allPixelsOfSegment.contains(neighbour.getToIndex())) {
-                        edge += WEIGHT_EDGE * neighbour.getCost();
+                        edgePixels++;
+                        segmentEdge += WEIGHT_EDGE * neighbour.getCost();
                         connectivity += WEIGHT_CONNECT * 0.125;
                     }
                 }
             }
+            // divide egdevalue for segment by actual number of "edges"
+            edge += (segmentEdge / edgePixels);
         }
+
         fitnessOutdated = false;
         fitness = new Fitness(edge, deviation, connectivity);
         return fitness;
