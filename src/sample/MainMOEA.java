@@ -38,7 +38,8 @@ public class MainMOEA extends Application {
             SCREEN_WIDTH    = IMAGE_WIDTH * SCALING_FACTOR * HORIZONTAL_PREVIEWS,
             SCREEN_HEIGHT   = IMAGE_HEIGHT * SCALING_FACTOR * VERTICAL_PREVIEWS;
 
-    private static final int IMAGE_CODE = 118035;
+    private static final int[] TEST_IMAGE_CODES = new int[] {86016, 118035, 147091, 176035, 176039, 353013};
+    private static final int IMAGE_CODE = TEST_IMAGE_CODES[1];
 
     @Override
     public void start(Stage primaryStage) throws Exception {
