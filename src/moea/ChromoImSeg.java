@@ -104,12 +104,13 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
         for (Segment segment : phenotype) {
             Set<Integer> allPixelsOfSegment = segment.getAll();
 
+            double segmentDeviation = 0;
             // calculate overall deviation for segment
             Pixel centroid = segment.getCentroid();
             for (Integer pid : allPixelsOfSegment) {
                 deviation += WEIGHT_OVDEV * image.getPixel(pid).distance(centroid);
             }
-            deviation /= allPixelsOfSegment.size();
+            deviation += (segmentDeviation/ allPixelsOfSegment.size());
 
             // calculate edge value and connectivity for segment
             double segmentEdge = 0;
