@@ -119,5 +119,20 @@ public class ImageUtil {
             writeToFile(front[i], pathToFolder, "pareto_" + i + ".png");
         }
     }
+
+    public static void deleteFiles(final String pathToFolder) throws Exception {
+        final File directory = new File(pathToFolder);
+        try {
+            for (final File fileEntry : directory.listFiles()) {
+                if (fileEntry.isDirectory()) {
+                    throw new Exception("Attempt to delete directory - did you give me the right path?");
+                } else {
+                    fileEntry.delete();
+                }
+            }
+        } catch (NullPointerException nullPointer) {
+            throw new Exception("Directory " + pathToFolder + " doesn't exist!");
+        }
+    }
 }
 
