@@ -20,9 +20,9 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
 
         @Override
         public int compareTo(Fitness o) {
-            if (this.connectivity <= o.connectivity && this.edge >= o.edge && this.deviation <= o.deviation) {
+            if (this.connectivity <= o.connectivity && this.edge <= o.edge && this.deviation <= o.deviation) {
                 return 1;
-            } else if ((this.connectivity >= o.connectivity && this.edge <= o.edge && this.deviation >= o.deviation)) {
+            } else if ((this.connectivity >= o.connectivity && this.edge >= o.edge && this.deviation >= o.deviation)) {
                 return -1;
             }
             return 0;
@@ -48,9 +48,9 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
     private boolean fitnessOutdated;
     private Fitness fitness;
 
-    private static final double WEIGHT_OVDEV = 2.0;     // PENALIZES SEGMENTS BEING DISSIMILAR IN COLOR
-    private static final double WEIGHT_EDGE = 1.0;      // REWARDS HAVING FEW NEIGHBOURING PIXELS
-    private static final double WEIGHT_CONNECT = 2.0;   // PENALIZES SEGMENTS ...?
+    private static final double WEIGHT_OVDEV = 1.0;     // PENALIZES SEGMENTS BEING DISSIMILAR IN COLOR
+    private static final double WEIGHT_EDGE = - 10.0;      // REWARDS HAVING FEW NEIGHBOURING PIXELS
+    private static final double WEIGHT_CONNECT = 1.0;   // PENALIZES SEGMENTS ...?
 
     public ChromoImSeg(EdgeOut[] genotype) {
         this.genotype = genotype;
@@ -82,7 +82,7 @@ public class ChromoImSeg implements Chromosome<ProblemImSeg> {
             fitness = calculateFitnessComponents(problem);
             fitnessOutdated = false;
         }
-        return fitness.connectivity + fitness.deviation - fitness.edge;
+        return fitness.connectivity + fitness.deviation + fitness.edge;
     }
 
     public Fitness calculateFitnessComponents(ProblemImSeg problem) {
