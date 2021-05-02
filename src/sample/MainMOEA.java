@@ -20,7 +20,6 @@ import moea.ImSegFiles;
 import moea.ProblemImSeg;
 import moea.ga.*;
 
-import java.beans.EventHandler;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -43,20 +42,18 @@ public class MainMOEA extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        Evaluator evaluator = new Evaluator("./res/training_images/" + IMAGE_CODE + "/blackWhite/",
-                "./sol/" + IMAGE_CODE + "/blackWhite/"  );
 
         var start = System.nanoTime();
         //TODO make main take the image code
-        ProblemImSeg problem = ImSegFiles.ReadImSegProblem("./res/training_images/118035/Test image.jpg");
+        ProblemImSeg problem = ImSegFiles.ReadImSegProblem("./res/training_images/" + IMAGE_CODE + "/Test image.jpg");
         System.out.println("Problem reading took: " + (System.nanoTime() - start)/1000000 + "ms");
         GeneticAlgorithmRunner<ProblemImSeg, PopulationImSeg, ChromoImSeg> gaRunner = new GeneticAlgorithmRunner<>(
-                new Breeder(problem, 1, 15),
-                new UniformCrossoverer(0.5f),
-                new MutatorImSeg(0.7f),
-                new ParentSelectorMOEA(10, 2),
+                new Breeder(problem, 1, 1),
+                new KPointCrossover(0.5f, 2, problem),
+                new MutatorImSeg(0.5f),
+                new ParentSelectorMOEA(10, 10),
                 new SurvivorSelectorMOEA(),
-                50
+                20
         );
 
         int[] trainingImageRaw = problem.getImage().rawImage();

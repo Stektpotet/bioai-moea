@@ -29,7 +29,7 @@ public class MainSimpleGA extends Application {
     public void start(Stage primaryStage) throws Exception {
         primaryStage.setTitle("MOEA Image Segmentation");
         var previewImg = new javafx.scene.image.Image(
-                new FileInputStream("./res/training_images/118035/Test image.jpg"),
+                new FileInputStream("./res/training_images/147091/Test image.jpg"),
                 241, 161, true, false
         );
         ImageView imgView = new ImageView(previewImg);
@@ -40,14 +40,14 @@ public class MainSimpleGA extends Application {
         primaryStage.setScene(scene);
 
         var start = System.nanoTime();
-        ProblemImSeg problem = ImSegFiles.ReadImSegProblem("./res/training_images/118035/Test image.jpg");
+        ProblemImSeg problem = ImSegFiles.ReadImSegProblem("./res/training_images/147091/Test image.jpg");
         System.out.println("Problem reading took: " + (System.nanoTime() - start)/1000000 + "ms");
         GeneticAlgorithmRunner<ProblemImSeg, PopulationImSeg, ChromoImSeg> gaRunner = new GeneticAlgorithmRunner<>(
-                new Breeder(problem, 1, 50),
-                new UniformCrossoverer(0.5f),
-                new MutatorImSeg(0.7f),
-                new TournamentSelection(10, 4),
-                new CrowdingSelector(problem, 10),
+                new Breeder(problem, 10, 50),
+                new UniformCrossoverer(1.0f),
+                new MutatorImSeg(1.0f),
+                new TournamentSelection(2, 4),
+                new MyPlusLambdaReplacement(problem),
                 60
         );
 
