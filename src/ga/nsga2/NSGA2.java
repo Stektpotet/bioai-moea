@@ -56,8 +56,8 @@ public class NSGA2 {
         }
 
         // 3. Build a feasible return value with solutions sorted by rank of non-domination
-        List<List<ChromoImSeg>> rankSorted = new ArrayList<>(rankSortedFronts.size());
-        for (int i = 1; i <= rankSortedFronts.size(); i++) {
+        List<List<ChromoImSeg>> rankSorted = new ArrayList<>(rankSortedFronts.size() - 1);
+        for (int i = 1; i < rankSortedFronts.size(); i++) {
             rankSorted.add(rankSortedFronts.get(i).stream().map(solutions::get).collect(Collectors.toList()));
         }
 
