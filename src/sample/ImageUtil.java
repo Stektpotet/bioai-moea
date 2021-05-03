@@ -3,7 +3,6 @@ package sample;
 import collections.Segment;
 import evaluator.Evaluator;
 import javafx.concurrent.Task;
-import javafx.scene.image.Image;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.WritableImage;
 import moea.ChromoImSeg;
@@ -42,24 +41,6 @@ public class ImageUtil {
         }
         return tracedRawImage;
     }
-    public static void traceSegmentsOnto(final WritableImage img, final Collection<Segment> segments, final int color) {
-        final int width = (int) img.getWidth();
-        final int height = (int) img.getHeight();
-        int[] buffer = new int[width * height];
-        img.getPixelReader().getPixels(
-                0, 0, width, height,
-                PixelFormat.getIntArgbPreInstance(), buffer,
-                0, width
-        );
-
-        img.getPixelWriter().setPixels(0, 0, width, height,
-                PixelFormat.getIntArgbPreInstance(), traceSegments(buffer, segments, color),
-                0, width
-        );
-    }
-    public static void traceSegmentsOnto(final WritableImage img, final Collection<Segment> segments) {
-        traceSegmentsOnto(img, segments, 0x00ff00);
-    }
 
     public static void writeImage(final WritableImage img, final int[] content) {
         final int width = (int) img.getWidth();
@@ -86,17 +67,6 @@ public class ImageUtil {
                 0, 0, width, height,
                 PixelFormat.getIntArgbPreInstance(), buffer, 0, width
         );
-    }
-
-    public static int[] readImageRaw(final Image img) {
-        final int width = (int) img.getWidth();
-        final int height = (int) img.getHeight();
-        final int[] buffer = new int[width * height];
-        img.getPixelReader().getPixels(
-                0, 0, width, height,
-                PixelFormat.getIntArgbPreInstance(), buffer, 0, width
-        );
-        return buffer;
     }
 
 
