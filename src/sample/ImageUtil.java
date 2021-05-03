@@ -106,7 +106,7 @@ public class ImageUtil {
         return directory.delete();
     }
 
-    public static final class Output extends Task<double[]> {
+    public static final class Output extends Task<PRIOptimum> {
 
         final List<ChromoImSeg> front;
         final ProblemImSeg problem;
@@ -122,7 +122,7 @@ public class ImageUtil {
         }
 
         @Override
-        protected double[] call() throws Exception {
+        protected PRIOptimum call() throws Exception {
             collections.Image image = problem.getImage();
             int width = image.getWidth();
             int height = image.getHeight();
@@ -136,14 +136,13 @@ public class ImageUtil {
             Evaluator evaluator = new Evaluator(optDir, outputDir + PATH_BLACK_WHITE);
             double[] PRIs = evaluator.runSameThread();
 
-            saveInfo(front, problem, outputDir, phenotypes, PRIs);
-
-            // TODO: make return full Info - eventuell String format from file saving?
-            return PRIs;
+            // save info on optimum and return
+            PRIOptimum optimum = saveInfo(front, problem, outputDir, phenotypes, PRIs);
+            return optimum;
         }
 
-        private static void saveInfo(List<ChromoImSeg> front, ProblemImSeg problem, String directory,
-                                     List<List<Segment>> phenotypes, double[] PRIs) throws IOException {
+        private static PRIOptimum saveInfo(List<ChromoImSeg> front, ProblemImSeg problem, String directory,
+                                           List<List<Segment>> phenotypes, double[] PRIs) throws IOException {
             // calculate objectives
             ChromoImSeg.Fitness[] objectives = front.stream(). map(
                     c -> c.calculateFitnessComponents(problem)).toArray(ChromoImSeg.Fitness[]::new);
@@ -194,6 +193,8 @@ public class ImageUtil {
             infoLines.add(1, "");
 
             Files.write(new File(directory + "info.txt").toPath(), infoLines, StandardOpenOption.CREATE);
+
+            return new PRIOptimum(optPRI, front.get(optI));
         }
 
         private static void saveInColorGreen(String directory, collections.Image image, int width, int height, List<List<Segment>> phenotypes) throws IOException {
@@ -219,6 +220,25 @@ public class ImageUtil {
                 ImageUtil.writeToFile(tracedImage, width, height, directory, "sol_" + i + ".png");
                 i++;
             }
+        }
+    }
+
+    public static final class PRIOptimum {
+
+        private final double PRI;
+        private final ChromoImSeg chromo;
+
+        public PRIOptimum(double PRI, ChromoImSeg chromo) {
+            this.PRI = PRI;
+            this.chromo = chromo;
+        }
+
+        public double getPRI() {
+            return PRI;
+        }
+
+        public ChromoImSeg getChromo() {
+            return chromo;
         }
     }
 }
