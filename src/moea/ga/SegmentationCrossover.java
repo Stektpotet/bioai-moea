@@ -44,7 +44,7 @@ public class SegmentationCrossover implements Recombinator<ChromoImSeg> {
     public List<ChromoImSeg> crossover(final ChromoImSeg mum, final ChromoImSeg dad) {
         List<ChromoImSeg>  children = new ArrayList<>(2);
         if (UtilChromoImSeg.hammingDistance(mum, dad) == 0) {
-            System.out.println("mum is dad!");
+//            System.out.println("mum is dad!");
             children.add(mum);
             children.add(dad);
             return children;

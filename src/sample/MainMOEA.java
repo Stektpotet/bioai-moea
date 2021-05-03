@@ -13,6 +13,7 @@ import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.scene.text.*;
 import javafx.stage.Stage;
 import moea.ChromoImSeg;
@@ -43,7 +44,8 @@ public class MainMOEA extends Application {
     private static final String
             LABEL_DEVIATION     = "Deviation:    ",
             LABEL_EDGE          = "Edge value:  ",
-            LABEL_CONNECTIVITY  = "Connectivity: ";
+            LABEL_CONNECTIVITY  = "Connectivity: ",
+            LABEL_GENERATION    = "Generation: ";
 
     private static final int[] TEST_IMAGE_CODES = new int[] {86016, 118035, 147091, 176035, 176039, 353013};
     private static final int IMAGE_CODE = TEST_IMAGE_CODES[2];
@@ -68,9 +70,16 @@ public class MainMOEA extends Application {
         Text[] paretoOptimalStats = new Text[NUM_PREVIEW_IMAGES * 3];
         guiComponentSetup(paretoOptimalPreviews, paretoOptimalImgs, paretoOptimalStats);
 
+        Text generationCounter = new Text(
+                SCREEN_WIDTH - PANEL_WIDTH,
+                SCREEN_HEIGHT - PANEL_HEIGHT + INFO_WIDTH,
+                String.format("%s#%05d", LABEL_GENERATION, 0)
+        );
+        generationCounter.setFill(Color.WHITE);
+        generationCounter.setFont(Font.font("Impact", 30));
         Group dataView = new Group(paretoOptimalStats);
         Group previewView = new Group(paretoOptimalPreviews);
-        Group root = new Group(previewView, dataView);
+        Group root = new Group(previewView, dataView, generationCounter);
         Scene scene = new Scene(root, SCREEN_WIDTH, SCREEN_HEIGHT, Color.BLACK);
 
         primaryStage.setTitle("MOEA Image Segmentation");
@@ -78,8 +87,10 @@ public class MainMOEA extends Application {
         primaryStage.setScene(scene);
 
         int[] trainingImageRaw = problem.getImage().rawImage();
-        gaRunner.valueProperty().addListener((obs, oldSnap, newSnap) -> updateOptimaPreviews(
-                paretoOptimalImgs, paretoOptimalStats, problem, trainingImageRaw, newSnap.optima));
+        gaRunner.valueProperty().addListener((obs, oldSnap, newSnap) -> {
+            updateOptimaPreviews(paretoOptimalImgs, paretoOptimalStats, problem, newSnap.optima);
+            generationCounter.setText(String.format("%s#%05d", LABEL_GENERATION, newSnap.currentGeneration));
+        });
 
         Button button = makeButton(problem, gaRunner);
         root.getChildren().add(button);
@@ -126,8 +137,9 @@ public class MainMOEA extends Application {
     }
 
     private void updateOptimaPreviews(WritableImage[] paretoOptimalImgs, Text[] paretoOptimalObjectives,
-                                      ProblemImSeg problem, int[] trainingImageRaw, List<ChromoImSeg> optima) {
+                                      ProblemImSeg problem, List<ChromoImSeg> optima) {
         ChromoImSeg[] optimaUnique = optima.stream().distinct().limit(NUM_PREVIEW_IMAGES).toArray(ChromoImSeg[]::new);
+        var trainingImageRaw = problem.getImage().rawImage();
         for (int i = 0; i < paretoOptimalImgs.length; i++) {
             if (i >= optimaUnique.length) {
                 if (i < NUM_PREVIEW_IMAGES) {

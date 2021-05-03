@@ -49,15 +49,14 @@ public class GeneticAlgorithmRunner<TProblem, TPop extends Population<TProblem, 
                 updateValue(new GeneticAlgorithmSnapshot<>(0, pop.getOptima()));
 
                 while (true) {
-                    start = System.nanoTime();
+//                    start = System.nanoTime();
                     Integer i = generationCounter.next();
-                    System.out.println("Doing generation #" + i);
                     List<TChromo> parents = parentSelector.select(pop);
                     List<TChromo> offspring = mutator.mutateAll(recombinator.recombine(parents));
                     pop = survivorSelector.select(pop, parents, offspring);
                     List<TChromo> optima = pop.getOptima();
                     updateValue(new GeneticAlgorithmSnapshot<>(i, optima));
-                    System.out.println("Generation #" + i + " took: " + (System.nanoTime() - start)/1000000 + "ms");
+//                    System.out.println("Generation #" + i + " took: " + (System.nanoTime() - start)/1000000 + "ms");
                 }
             }
         };

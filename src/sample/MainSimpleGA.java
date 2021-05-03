@@ -38,7 +38,8 @@ public class MainSimpleGA extends Application {
             LABEL_DEVIATION     = "Deviation:    ",
             LABEL_EDGE          = "Edge value:  ",
             LABEL_CONNECTIVITY  = "Connectivity: ",
-            LABEL_FITNESS       = "Fitness:      ";
+            LABEL_FITNESS       = "Fitness:      ",
+            LABEL_GENERATION    = "Generation: ";
     private static final String[] LABELS = new String[] {LABEL_DEVIATION, LABEL_EDGE, LABEL_DEVIATION, LABEL_FITNESS};
 
     private static final int[] TEST_IMAGE_CODES = new int[] {86016, 118035, 147091, 176035, 176039, 353013};
@@ -64,7 +65,14 @@ public class MainSimpleGA extends Application {
         Text[] stats = new Text[4];
         guiComponentSetup(previewViews, previewImages, stats);
 
-        Group root = new Group(new Group(stats), new Group(previewViews));
+        Text generationCounter = new Text(
+                IMAGE_WIDTH * IMAGE_SCALING_FACTOR,
+                IMAGE_HEIGHT * IMAGE_SCALING_FACTOR - 32,
+                String.format("%s#%05d", LABEL_GENERATION, 0)
+        );
+        generationCounter.setFill(Color.WHITE);
+        generationCounter.setFont(Font.font("Impact", 30));
+        Group root = new Group(new Group(stats), new Group(previewViews), generationCounter);
         Scene scene = new Scene(root, SCREEN_WIDTH, SCREEN_HEIGHT, Color.BLACK);
 
         primaryStage.setTitle("SimpleGA Image Segmentation");
@@ -72,8 +80,10 @@ public class MainSimpleGA extends Application {
         primaryStage.setScene(scene);
 
         int[] trainingImageRaw = problem.getImage().rawImage();
-        gaRunner.valueProperty().addListener((obs, oldSnap, newSnap) -> updateOptimaPreviews(
-                previewImages, stats, problem, trainingImageRaw, newSnap.optima));
+        gaRunner.valueProperty().addListener((obs, oldSnap, newSnap) -> {
+            updateOptimaPreviews(previewImages, stats, problem, newSnap.optima);
+            generationCounter.setText(String.format("%s#%05d", LABEL_GENERATION, newSnap.currentGeneration));
+        });
 
         primaryStage.show();
 
@@ -102,8 +112,9 @@ public class MainSimpleGA extends Application {
     }
 
     private void updateOptimaPreviews(WritableImage[] previewImages, Text[] stats,
-                                      ProblemImSeg problem, int[] trainingImageRaw, List<ChromoImSeg> optima) {
+                                      ProblemImSeg problem, List<ChromoImSeg> optima) {
         ChromoImSeg best = optima.get(0);
+        var trainingImageRaw = problem.getImage().rawImage();
         int[] traced = ImageUtil.traceSegments(trainingImageRaw, best.getPhenotype(problem));
         ImageUtil.writeImage(previewImages[0], traced);
 
