@@ -205,7 +205,7 @@ public class MainMOEA extends Application {
                 ImageUtil.writeImage(bestEvaluatedImage, traced);
 //                bestEvaluatedView.setImage(bestEvaluatedImage);
                 scoreText.setText(String.format("Score: %.2f%%", 100 * score));
-                System.out.println("listened");
+//                System.out.println("listened");
             });
 
             Thread thread = new Thread(output);
