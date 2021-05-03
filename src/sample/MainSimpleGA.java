@@ -1,7 +1,5 @@
 package sample;
 
-import collections.Image;
-import collections.Segment;
 import ga.GeneticAlgorithmRunner;
 import ga.nsga2.ParentSelectorMOEA;
 import ga.nsga2.SurvivorSelectorMOEA;
@@ -9,7 +7,6 @@ import javafx.application.Application;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.image.ImageView;
-import javafx.scene.image.PixelFormat;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -20,7 +17,6 @@ import moea.ImSegFiles;
 import moea.ProblemImSeg;
 import moea.ga.*;
 
-import java.io.FileInputStream;
 import java.util.Arrays;
 import java.util.List;
 
@@ -76,7 +72,7 @@ public class MainSimpleGA extends Application {
         primaryStage.setScene(scene);
 
         int[] trainingImageRaw = problem.getImage().rawImage();
-        gaRunner.valueProperty().addListener((obs, oldSnap, newSnap) -> updateOptimaPreviews(previewViews,
+        gaRunner.valueProperty().addListener((obs, oldSnap, newSnap) -> updateOptimaPreviews(
                 previewImages, stats, problem, trainingImageRaw, newSnap.optima));
 
         primaryStage.show();
@@ -105,7 +101,7 @@ public class MainSimpleGA extends Application {
         }
     }
 
-    private void updateOptimaPreviews(ImageView[] previews, WritableImage[] previewImages, Text[] stats,
+    private void updateOptimaPreviews(WritableImage[] previewImages, Text[] stats,
                                       ProblemImSeg problem, int[] trainingImageRaw, List<ChromoImSeg> optima) {
         ChromoImSeg best = optima.get(0);
         int[] traced = ImageUtil.traceSegments(trainingImageRaw, best.getPhenotype(problem));

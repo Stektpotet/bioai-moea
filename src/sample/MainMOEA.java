@@ -30,11 +30,11 @@ public class MainMOEA extends Application {
             BLACK           = 0x00000000,
             IMAGE_WIDTH     = 241,
             IMAGE_HEIGHT    = 161,
-            INFO_HEIGHT     = 64,
+            INFO_WIDTH      = 192,
             NUM_PREVIEW_IMAGES = 5,
-            IMAGE_SCALING_FACTOR = 2,
-            PANEL_HEIGHT    = (IMAGE_HEIGHT * IMAGE_SCALING_FACTOR) + INFO_HEIGHT,
-            PANEL_WIDTH     = IMAGE_WIDTH * IMAGE_SCALING_FACTOR,
+            IMAGE_SCALING_FACTOR = 1,
+            PANEL_HEIGHT    = (IMAGE_HEIGHT * IMAGE_SCALING_FACTOR) * 2,
+            PANEL_WIDTH     = IMAGE_WIDTH * IMAGE_SCALING_FACTOR + INFO_WIDTH,
             HORIZONTAL_PREVIEWS = 3,
             VERTICAL_PREVIEWS = 2,
             SCREEN_WIDTH    = PANEL_WIDTH * HORIZONTAL_PREVIEWS,
@@ -42,70 +42,44 @@ public class MainMOEA extends Application {
 
     private static final String
             LABEL_DEVIATION     = "Deviation:    ",
-            LABEL_EDGE          = "Edge value:   ",
+            LABEL_EDGE          = "Edge value:  ",
             LABEL_CONNECTIVITY  = "Connectivity: ";
 
     private static final int[] TEST_IMAGE_CODES = new int[] {86016, 118035, 147091, 176035, 176039, 353013};
-    private static final int IMAGE_CODE = TEST_IMAGE_CODES[1];
+    private static final int IMAGE_CODE = TEST_IMAGE_CODES[2];
 
     @Override
     public void start(Stage primaryStage) throws Exception {
 
         var start = System.nanoTime();
-        //TODO make main take the image code
         ProblemImSeg problem = ImSegFiles.ReadImSegProblem("./res/training_images/" + IMAGE_CODE + "/Test image.jpg");
         System.out.println("Problem reading took: " + (System.nanoTime() - start)/1000000 + "ms");
         GeneticAlgorithmRunner<ProblemImSeg, PopulationImSeg, ChromoImSeg> gaRunner = new GeneticAlgorithmRunner<>(
-                new Breeder(problem, 1, 1),
-                new KPointCrossover(0.5f, 2, problem),
-                new MutatorImSeg(0.5f),
-                new ParentSelectorMOEA(10, 10),
+                new Breeder(problem, 5, 25),
+                new SegmentationCrossover(0.7f, 2, problem),
+                new MutatorImSeg(0.3f),
+                new ParentSelectorMOEA(10, 50),
                 new SurvivorSelectorMOEA(),
-                20
+                200
         );
 
-        int[] trainingImageRaw = problem.getImage().rawImage();
+        ImageView[] paretoOptimalPreviews = new ImageView[NUM_PREVIEW_IMAGES * 2];
+        WritableImage[] paretoOptimalImgs = new WritableImage[NUM_PREVIEW_IMAGES * 2];
+        Text[] paretoOptimalStats = new Text[NUM_PREVIEW_IMAGES * 3];
+        guiComponentSetup(paretoOptimalPreviews, paretoOptimalImgs, paretoOptimalStats);
 
-        primaryStage.setTitle("MOEA Image Segmentation");
-
-        ImageView[] paretoOptimalPreviews = new ImageView[NUM_PREVIEW_IMAGES];
-        WritableImage[] paretoOptimalImgs = new WritableImage[NUM_PREVIEW_IMAGES];
-        Text[] paretoOptimalObjectives = new Text[NUM_PREVIEW_IMAGES * 3];
-        for (int i = 0; i < NUM_PREVIEW_IMAGES; i++) {
-            paretoOptimalImgs[i] = new WritableImage(IMAGE_WIDTH, IMAGE_HEIGHT);
-            paretoOptimalPreviews[i] = new ImageView(paretoOptimalImgs[i]);
-
-            paretoOptimalPreviews[i].setFitWidth(IMAGE_WIDTH * IMAGE_SCALING_FACTOR);
-            paretoOptimalPreviews[i].setFitHeight(IMAGE_HEIGHT * IMAGE_SCALING_FACTOR);
-
-            double x = PANEL_WIDTH * (i % HORIZONTAL_PREVIEWS);
-            double y = PANEL_HEIGHT * (i / HORIZONTAL_PREVIEWS);
-            paretoOptimalPreviews[i].setX(x);
-            paretoOptimalPreviews[i].setY(y);
-
-            y += (PANEL_HEIGHT - INFO_HEIGHT);
-            paretoOptimalObjectives[i * 3    ] = new Text(x + 48, y + 16, LABEL_DEVIATION);
-            paretoOptimalObjectives[i * 3 + 1] = new Text(x + 48, y + 32, LABEL_EDGE);
-            paretoOptimalObjectives[i * 3 + 2] = new Text(x + 48, y + 48, LABEL_CONNECTIVITY);
-        }
-        for (Text paretoOptimalObjective : paretoOptimalObjectives) {
-            paretoOptimalObjective.setFill(Color.GREEN);
-            paretoOptimalObjective.setFont(Font.font("Verdana", 12));
-        }
-
-        Text textPRI = new Text(IMAGE_WIDTH * IMAGE_SCALING_FACTOR * 2, IMAGE_HEIGHT * IMAGE_SCALING_FACTOR, "Put some PRI in me PLS!");
-        Group dataView = new Group(paretoOptimalObjectives);
-//        dataView.setTranslateX();
-        Group root = new Group(paretoOptimalPreviews);
-        root.getChildren().add(dataView);
-
+        Group dataView = new Group(paretoOptimalStats);
+        Group previewView = new Group(paretoOptimalPreviews);
+        Group root = new Group(previewView, dataView);
         Scene scene = new Scene(root, SCREEN_WIDTH, SCREEN_HEIGHT, Color.BLACK);
 
+        primaryStage.setTitle("MOEA Image Segmentation");
         primaryStage.setResizable(false);
         primaryStage.setScene(scene);
 
-        gaRunner.valueProperty().addListener((obs, oldSnap, newSnap) -> updateOptimaPreviews(paretoOptimalPreviews,
-                paretoOptimalImgs, paretoOptimalObjectives, problem, trainingImageRaw, newSnap.optima));
+        int[] trainingImageRaw = problem.getImage().rawImage();
+        gaRunner.valueProperty().addListener((obs, oldSnap, newSnap) -> updateOptimaPreviews(
+                paretoOptimalImgs, paretoOptimalStats, problem, trainingImageRaw, newSnap.optima));
 
         Button button = makeButton(problem, gaRunner);
         root.getChildren().add(button);
@@ -123,18 +97,53 @@ public class MainMOEA extends Application {
         primaryStage.show();
         gaRunner.start();
     }
-    
-    private void updateOptimaPreviews(ImageView[] paretoOptimalPreviews, WritableImage[] paretoOptimalImgs, Text[] paretoOptimalObjectives,
+
+    private void guiComponentSetup(ImageView[] previews, WritableImage[] previewImages, Text[] stats) {
+        for (int i = 0; i < NUM_PREVIEW_IMAGES * 2; i++) {  // Create the images and set sizes
+            previewImages[i] = new WritableImage(IMAGE_WIDTH, IMAGE_HEIGHT);
+            previews[i] = new ImageView(previewImages[i]);
+            previews[i].setFitWidth(IMAGE_WIDTH * IMAGE_SCALING_FACTOR);
+            previews[i].setFitHeight(IMAGE_HEIGHT * IMAGE_SCALING_FACTOR);
+            ImageUtil.fillImage(previewImages[i], 0x00111111);
+        }
+        for (int i = 0; i < NUM_PREVIEW_IMAGES; i++) {
+            double x = PANEL_WIDTH * (i % HORIZONTAL_PREVIEWS);
+            double y = PANEL_HEIGHT * (i / HORIZONTAL_PREVIEWS);
+            previews[i * 2].setX(x);
+            previews[i * 2 + 1].setX(x);
+            previews[i * 2].setY(y);
+            previews[i * 2 + 1].setY(y + IMAGE_HEIGHT);
+
+            x += IMAGE_WIDTH;
+            stats[i * 3    ] = new Text(x + 16, y + 16, LABEL_DEVIATION);
+            stats[i * 3 + 1] = new Text(x + 16, y + 32, LABEL_EDGE);
+            stats[i * 3 + 2] = new Text(x + 16, y + 48, LABEL_CONNECTIVITY);
+        }
+        for (Text paretoOptimalObjective : stats) {
+            paretoOptimalObjective.setFill(Color.GREEN);
+            paretoOptimalObjective.setFont(Font.font("Consolas", 12));
+        }
+    }
+
+    private void updateOptimaPreviews(WritableImage[] paretoOptimalImgs, Text[] paretoOptimalObjectives,
                                       ProblemImSeg problem, int[] trainingImageRaw, List<ChromoImSeg> optima) {
         ChromoImSeg[] optimaUnique = optima.stream().distinct().limit(NUM_PREVIEW_IMAGES).toArray(ChromoImSeg[]::new);
         for (int i = 0; i < paretoOptimalImgs.length; i++) {
             if (i >= optimaUnique.length) {
-                ImageUtil.clearImage(paretoOptimalImgs[i]);
+                if (i < NUM_PREVIEW_IMAGES) {
+                    ImageUtil.clearImage(paretoOptimalImgs[i * 2]);
+                    ImageUtil.clearImage(paretoOptimalImgs[i * 2 + 1]);
+                }
                 continue;
             }
-            int[] traced = ImageUtil.traceSegments(trainingImageRaw, optimaUnique[i].getPhenotype(problem));
-            ImageUtil.writeImage(paretoOptimalImgs[i], traced);
-            paretoOptimalPreviews[i].setImage(paretoOptimalImgs[i]);
+            var phenotype = optimaUnique[i].getPhenotype(problem);
+            int[] traced = ImageUtil.traceSegments(trainingImageRaw, phenotype);
+            ImageUtil.writeImage(paretoOptimalImgs[i * 2], traced);
+
+            int[] binaryImage = new int[trainingImageRaw.length];
+            Arrays.fill(binaryImage, 0xffffffff);
+            binaryImage = ImageUtil.traceSegments(binaryImage, phenotype, 0xff000000);
+            ImageUtil.writeImage(paretoOptimalImgs[i * 2 + 1], binaryImage);
 
             ChromoImSeg.Fitness fitness = optimaUnique[i].calculateFitnessComponents(problem);
             paretoOptimalObjectives[i * 3].setText(String.format("%s%.2f", LABEL_DEVIATION, fitness.getDeviation()));
