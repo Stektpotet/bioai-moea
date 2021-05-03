@@ -2,6 +2,7 @@ package sample;
 
 import ga.GeneticAlgorithmRunner;
 import ga.GeneticAlgorithmSnapshot;
+import ga.nsga2.DiversitySelectorMOEA;
 import ga.nsga2.ParentSelectorMOEA;
 import ga.nsga2.SurvivorSelectorMOEA;
 import javafx.application.Application;
@@ -56,7 +57,7 @@ public class MainMOEA extends Application {
     public void start(Stage primaryStage) throws Exception {
 
         var start = System.nanoTime();
-        ProblemImSeg problem = ImSegFiles.ReadImSegProblem("./res/training_images/" + IMAGE_CODE + "/Test image.jpg");
+        ProblemImSeg problem = ImSegFiles.ReadImSegProblem(PATH_TO_PROBLEM);
 
         System.out.println("Problem reading took: " + (System.nanoTime() - start)/1000000 + "ms");
         GeneticAlgorithmRunner<ProblemImSeg, PopulationImSeg, ChromoImSeg> gaRunner = new GeneticAlgorithmRunner<>(
@@ -64,7 +65,7 @@ public class MainMOEA extends Application {
                 new KPointCrossover(0.5f, 2, problem),
                 new MutatorImSeg(0.5f),
                 new ParentSelectorMOEA(50, 50),
-                new SurvivorSelectorMOEA(),
+                new DiversitySelectorMOEA(),
                 200
         );
 
