@@ -190,8 +190,8 @@ public class ImageUtil {
             }
 
             // prepend info for optimal chromosome
-            infoLines.add(0, "");
             infoLines.add(0, infoLines.get(optI));
+            infoLines.add(1, "");
 
             Files.write(new File(directory + "info.txt").toPath(), infoLines, StandardOpenOption.CREATE);
         }
