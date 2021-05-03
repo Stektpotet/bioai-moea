@@ -121,46 +121,22 @@ public class ImageUtil {
         }
     }
 
-    public static void writeToFile(final Image image, final String directoryPath, final String name) throws IOException {
-        writeToFile(readImageRaw(image), (int) image.getWidth(), (int) image.getHeight(), directoryPath, name);
-    }
-
-    public static void writeImagesToFiles(final String pathToFolder, final int[][] front, int width, int height) throws IOException {
-        for (int i = 0; i < front.length; i++) {
-            writeToFile(front[i], width, height, pathToFolder, "pareto_" + i + ".png");
-        }
-    }
-
-    public static void writeImagesToFiles(final String pathToFolder, final Image[] front) throws IOException {
-        for (int i = 0; i < front.length; i++) {
-            writeToFile(front[i], pathToFolder, "pareto_" + i + ".png");
-        }
-    }
-
-    public static void deleteFiles(final String pathToFolder) throws Exception {
+    public static void deleteRecursively(final String pathToFolder) {
         final File directory = new File(pathToFolder);
-        try {
-            for (final File fileEntry : directory.listFiles()) {
-                if (fileEntry.isDirectory()) {
-                    throw new Exception("Attempt to delete directory - did you give me the right path?");
-                } else {
-                    fileEntry.delete();
-                }
-            }
-        } catch (NullPointerException nullPointer) {
-            throw new Exception("Directory " + pathToFolder + " doesn't exist!");
-        }
+        deleteRecursively(directory);
     }
 
+    public static boolean deleteRecursively(File directory) {
+        File[] content = directory.listFiles();
+        if (content != null) {
+            for (File entry: content) {
+                deleteRecursively(entry);
+            }
+        }
+        return directory.delete();
+    }
 
-
-
-
-
-
-    ///// Klara trenger litt space
-
-    public final class Output extends Task<double[]> {
+    public static final class Output extends Task<double[]> {
 
         final List<ChromoImSeg> front;
         final ProblemImSeg problem;
@@ -268,10 +244,9 @@ public class ImageUtil {
         public static void writePhenosToPngInFolderWithColor(final List<List<Segment>> phenotypes, int[] rawImage, String directory,
                                                              int width, int height, int color) throws IOException {
             int i = 0;
-            // collections.Image image = problem.getImage(); - to do .getWidth and .getHeight
             for (List<Segment> pheno: phenotypes) {
                 int[] tracedImage = ImageUtil.traceSegments(rawImage, pheno, color);
-                ImageUtil.writeToFile(tracedImage, width, height, directory, i + ".png");
+                ImageUtil.writeToFile(tracedImage, width, height, directory, "sol_" + i + ".png");
                 i++;
             }
         }

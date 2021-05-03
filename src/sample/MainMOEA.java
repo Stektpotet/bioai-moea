@@ -1,7 +1,5 @@
 package sample;
 
-import collections.Image;
-import evaluator.Evaluator;
 import ga.GeneticAlgorithmRunner;
 import ga.GeneticAlgorithmSnapshot;
 import ga.nsga2.ParentSelectorMOEA;
@@ -13,22 +11,22 @@ import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
-import javafx.scene.text.*;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import moea.ChromoImSeg;
 import moea.ImSegFiles;
 import moea.ProblemImSeg;
-import moea.ga.*;
+import moea.ga.Breeder;
+import moea.ga.KPointCrossover;
+import moea.ga.MutatorImSeg;
+import moea.ga.PopulationImSeg;
 
-import java.io.IOException;
 import java.util.*;
 
 public class MainMOEA extends Application {
 
     private static final int
-            WHITE           = 0xffffffff,
-            BLACK           = 0x00000000,
             IMAGE_WIDTH     = 241,
             IMAGE_HEIGHT    = 161,
             INFO_WIDTH      = 192,
@@ -48,19 +46,24 @@ public class MainMOEA extends Application {
             LABEL_GENERATION    = "Generation: ";
 
     private static final int[] TEST_IMAGE_CODES = new int[] {86016, 118035, 147091, 176035, 176039, 353013};
-    private static final int IMAGE_CODE = TEST_IMAGE_CODES[2];
+    private static final int IMAGE_CODE = TEST_IMAGE_CODES[1];
+
+    private static final String PATH_TO_SOLUTION_FOLDER = "./sol/" + IMAGE_CODE + "/";
+    private static final String PATH_TO_GT_FOLDER = "./res/training_images/" + IMAGE_CODE + "/blackWhite/";
+    private static final String PATH_TO_PROBLEM = "./res/training_images/" + IMAGE_CODE + "/Test image.jpg";
 
     @Override
     public void start(Stage primaryStage) throws Exception {
 
         var start = System.nanoTime();
         ProblemImSeg problem = ImSegFiles.ReadImSegProblem("./res/training_images/" + IMAGE_CODE + "/Test image.jpg");
+
         System.out.println("Problem reading took: " + (System.nanoTime() - start)/1000000 + "ms");
         GeneticAlgorithmRunner<ProblemImSeg, PopulationImSeg, ChromoImSeg> gaRunner = new GeneticAlgorithmRunner<>(
-                new Breeder(problem, 5, 25),
-                new SegmentationCrossover(0.7f, 2, problem),
-                new MutatorImSeg(0.3f),
-                new ParentSelectorMOEA(10, 50),
+                new Breeder(problem, 1, 10),
+                new KPointCrossover(0.5f, 2, problem),
+                new MutatorImSeg(0.5f),
+                new ParentSelectorMOEA(50, 50),
                 new SurvivorSelectorMOEA(),
                 200
         );
@@ -165,38 +168,23 @@ public class MainMOEA extends Application {
 
     }
 
-    public static void saveParetoFrontPreview(ProblemImSeg problem, List<ChromoImSeg> front) throws IOException {
-        final Image image = problem.getImage();
-        final int[][] buffers = new int[front.size()][problem.getPixelCount()];
-        for (int i = 0; i < front.size(); i++) {
-            Arrays.fill(buffers[i], WHITE);
-            buffers[i] = ImageUtil.traceSegments(buffers[i], front.get(i).getPhenotype(problem), BLACK);
-        }
-        ImageUtil.writeImagesToFiles("./sol/" + IMAGE_CODE + "/blackWhite/", buffers, image.getWidth(), image.getHeight());
-    }
-
     private Button makeButton(ProblemImSeg problem,
                               GeneticAlgorithmRunner<ProblemImSeg, PopulationImSeg, ChromoImSeg> gaRunner) {
         Button button = new Button("Evaluate");
         button.setOnAction(actionEvent -> {
             GeneticAlgorithmSnapshot<ChromoImSeg> snapshot = gaRunner.valueProperty().get();
             List<ChromoImSeg> firstFront = snapshot.optima;
-            try {
-                saveParetoFrontPreview(problem, firstFront);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            Evaluator evaluator = new Evaluator("./res/training_images/" + IMAGE_CODE + "/blackWhite/",
-                    "./sol/" + IMAGE_CODE + "/blackWhite/" );
-            evaluator.valueProperty().addListener(((observableValue, previous, current) -> {
-                if (current == null)
-                    return;
-                for (int i = 0; i < current.length; i++) {
-                    if (current[i] > 0.7)
-                        System.out.println("Segementation " + i + ": " + current[i]);
-                }
-            }));
-            Thread thread = new Thread(evaluator);
+
+            ImageUtil.deleteRecursively(PATH_TO_SOLUTION_FOLDER);
+
+            ImageUtil.Output output = new ImageUtil.Output(firstFront, problem,
+                    PATH_TO_SOLUTION_FOLDER, PATH_TO_GT_FOLDER);
+            output.valueProperty().addListener((observableValue, previous, current) -> {
+                // TODO implement listener
+                System.out.println("listened");
+            });
+
+            Thread thread = new Thread(output);
             thread.setDaemon(true);
             thread.start();
         });

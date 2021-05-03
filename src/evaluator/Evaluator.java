@@ -9,7 +9,6 @@ import java.util.List;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelReader;
-import javafx.concurrent.Task;
 
 /**
  * How to use:
@@ -19,7 +18,7 @@ import javafx.concurrent.Task;
  * the "feedbackStation" object, wrapping this object in a Thread object, then calling start() on that thread.
  * You will need to implement the FeedbackStation interface yourselves.
  */
-public final class Evaluator extends Task<double[]> {
+public final class Evaluator {
     String optFolder;
     String studFolder;
 
@@ -41,18 +40,6 @@ public final class Evaluator extends Task<double[]> {
         studImages = new ArrayList<>();
         this.optFolder = optFolder;
         this.studFolder = studFolder;
-    }
-
-    @Override
-    protected double[] call() {
-        updateOptimalFiles();
-        updateStudentFiles();
-        try {
-            updateImageLists();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        return evaluate();
     }
 
     public double[] runSameThread() throws FileNotFoundException {
