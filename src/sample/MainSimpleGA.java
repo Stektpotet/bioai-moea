@@ -1,5 +1,6 @@
 package sample;
 
+import collections.Image;
 import ga.GeneticAlgorithmRunner;
 import ga.GeneticAlgorithmSnapshot;
 import ga.nsga2.ParentSelectorMOEA;
@@ -65,20 +66,36 @@ public class MainSimpleGA extends Application {
                 new MyPlusLambdaReplacement(problem),
                 10
         );
+        final Image image = problem.getImage();
 
         ImageView[] previewViews = new ImageView[2];
         WritableImage[] previewImages = new WritableImage[2];
         Text[] stats = new Text[4];
         guiComponentSetup(previewViews, previewImages, stats);
 
-        Text generationCounter = new Text(
-                IMAGE_WIDTH * IMAGE_SCALING_FACTOR,
-                IMAGE_HEIGHT * IMAGE_SCALING_FACTOR - 32,
+
+        WritableImage bestEvaluatedImg = new WritableImage(image.getWidth(), image.getHeight());
+        ImageView bestEvaluatedView = new ImageView(bestEvaluatedImg);
+
+        bestEvaluatedView.setFitWidth(INFO_WIDTH);
+        bestEvaluatedView.setFitHeight(INFO_WIDTH * (IMAGE_HEIGHT / IMAGE_WIDTH));
+
+        final int evalXPosition = IMAGE_WIDTH * IMAGE_SCALING_FACTOR;
+        final int evalYPosition = IMAGE_HEIGHT * IMAGE_SCALING_FACTOR - 32;
+        bestEvaluatedView.setX(evalXPosition);
+        bestEvaluatedView.setY(evalYPosition + 128);
+
+        Text generationCounter = new Text(evalXPosition, evalYPosition + 20,
                 String.format("%s#%05d", LABEL_GENERATION, 0)
         );
         generationCounter.setFill(Color.WHITE);
         generationCounter.setFont(Font.font("Consolas", 20));
-        Group root = new Group(new Group(stats), new Group(previewViews), generationCounter);
+
+        Text scoreText = new Text(evalXPosition, evalYPosition + 68, String.format("Score: %.2f%%", 0.0f));
+        scoreText.setFill(Color.WHITE);
+        scoreText.setFont(Font.font("Consolas", 20));
+
+        Group root = new Group(new Group(stats), new Group(previewViews), generationCounter, bestEvaluatedView, scoreText);
         Scene scene = new Scene(root, SCREEN_WIDTH, SCREEN_HEIGHT, Color.BLACK);
 
         primaryStage.setTitle("SimpleGA Image Segmentation");
@@ -90,7 +107,7 @@ public class MainSimpleGA extends Application {
             generationCounter.setText(String.format("%s#%05d", LABEL_GENERATION, newSnap.currentGeneration));
         });
 
-        Button button = makeButton(problem, gaRunner);
+        Button button = makeButton(problem, gaRunner, bestEvaluatedImg, scoreText);
         root.getChildren().add(button);
 
         primaryStage.show();
@@ -140,7 +157,7 @@ public class MainSimpleGA extends Application {
     }
 
     private Button makeButton(ProblemImSeg problem,
-                              GeneticAlgorithmRunner<ProblemImSeg, PopulationImSeg, ChromoImSeg> gaRunner) {
+                              GeneticAlgorithmRunner<ProblemImSeg, PopulationImSeg, ChromoImSeg> gaRunner, WritableImage bestEvaluatedImage, Text scoreText) {
         Button button = new Button("Evaluate");
         button.setOnAction(actionEvent -> {
             GeneticAlgorithmSnapshot<ChromoImSeg> snapshot = gaRunner.valueProperty().get();
@@ -151,15 +168,21 @@ public class MainSimpleGA extends Application {
             ImageUtil.Output output = new ImageUtil.Output(firstFront, problem,
                     PATH_TO_SOLUTION_FOLDER, PATH_TO_GT_FOLDER);
             output.valueProperty().addListener((observableValue, previous, current) -> {
-                // TODO implement listener
-                System.out.println("listened");
+                // current: PRI_Optimum
+                ChromoImSeg bestChromo = current.getChromo();
+                double score = current.getPRI();
+
+                int[] traced = ImageUtil.traceSegments(problem.getImage().rawImage(), bestChromo.getPhenotype(problem));
+                ImageUtil.writeImage(bestEvaluatedImage, traced);
+//                bestEvaluatedView.setImage(bestEvaluatedImage);
+                scoreText.setText(String.format("Score: %.2f%%", 100 * score));
             });
 
             Thread thread = new Thread(output);
             thread.setDaemon(true);
             thread.start();
         });
-        button.setLayoutY(IMAGE_HEIGHT * IMAGE_SCALING_FACTOR);
+        button.setLayoutY(IMAGE_HEIGHT * IMAGE_SCALING_FACTOR - 8);
         button.setLayoutX(IMAGE_WIDTH * IMAGE_SCALING_FACTOR);
         return button;
     }

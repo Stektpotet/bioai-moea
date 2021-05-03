@@ -5,7 +5,6 @@ import ga.GeneticAlgorithmRunner;
 import ga.GeneticAlgorithmSnapshot;
 import ga.nsga2.DiversitySelectorMOEA;
 import ga.nsga2.ParentSelectorMOEA;
-import ga.nsga2.SurvivorSelectorMOEA;
 import javafx.application.Application;
 import javafx.scene.Group;
 import javafx.scene.Scene;
@@ -112,7 +111,7 @@ public class MainMOEA extends Application {
             generationCounter.setText(String.format("%s#%05d", LABEL_GENERATION, newSnap.currentGeneration));
         });
 
-        Button button = makeButton(problem, gaRunner, bestEvaluatedView, bestEvaluatedImg, scoreText);
+        Button button = makeButton(problem, gaRunner, bestEvaluatedImg, scoreText);
         root.getChildren().add(button);
 
 
@@ -186,7 +185,7 @@ public class MainMOEA extends Application {
     }
 
     private Button makeButton(ProblemImSeg problem,
-                              GeneticAlgorithmRunner<ProblemImSeg, PopulationImSeg, ChromoImSeg> gaRunner, ImageView bestEvaluatedView, WritableImage bestEvaluatedImage, Text scoreText) {
+                              GeneticAlgorithmRunner<ProblemImSeg, PopulationImSeg, ChromoImSeg> gaRunner, WritableImage bestEvaluatedImage, Text scoreText) {
         Button button = new Button("Evaluate");
         button.setOnAction(actionEvent -> {
             GeneticAlgorithmSnapshot<ChromoImSeg> snapshot = gaRunner.valueProperty().get();
@@ -205,7 +204,6 @@ public class MainMOEA extends Application {
                 ImageUtil.writeImage(bestEvaluatedImage, traced);
 //                bestEvaluatedView.setImage(bestEvaluatedImage);
                 scoreText.setText(String.format("Score: %.2f%%", 100 * score));
-                System.out.println("listened");
             });
 
             Thread thread = new Thread(output);
