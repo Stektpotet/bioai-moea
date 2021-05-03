@@ -3,6 +3,8 @@ package sample;
 import collections.Image;
 import collections.Segment;
 import ga.GeneticAlgorithmRunner;
+import ga.nsga2.ParentSelectorMOEA;
+import ga.nsga2.SurvivorSelectorMOEA;
 import javafx.application.Application;
 import javafx.scene.Group;
 import javafx.scene.Scene;
@@ -10,6 +12,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import moea.ChromoImSeg;
 import moea.ImSegFiles;
@@ -17,83 +21,107 @@ import moea.ProblemImSeg;
 import moea.ga.*;
 
 import java.io.FileInputStream;
+import java.util.Arrays;
 import java.util.List;
 
 public class MainSimpleGA extends Application {
 
     private static final int
-            SCREEN_WIDTH = 1280,
-            SCREEN_HEIGHT = (int)(1280/1.49689440994); // Aspect Ratio of image
+            IMAGE_WIDTH     = 241,
+            IMAGE_HEIGHT    = 161,
+            INFO_WIDTH      = 256,
+            IMAGE_SCALING_FACTOR = 2,
+            PANEL_HEIGHT    = IMAGE_HEIGHT * IMAGE_SCALING_FACTOR,
+            PANEL_WIDTH     = (IMAGE_WIDTH * IMAGE_SCALING_FACTOR) + INFO_WIDTH,
+            HORIZONTAL_PREVIEWS = 1,
+            VERTICAL_PREVIEWS = 2,
+            SCREEN_WIDTH    = PANEL_WIDTH * HORIZONTAL_PREVIEWS,
+            SCREEN_HEIGHT   = PANEL_HEIGHT * VERTICAL_PREVIEWS;
+
+    private static final String
+            LABEL_DEVIATION     = "Deviation:    ",
+            LABEL_EDGE          = "Edge value:  ",
+            LABEL_CONNECTIVITY  = "Connectivity: ",
+            LABEL_FITNESS       = "Fitness:      ";
+    private static final String[] LABELS = new String[] {LABEL_DEVIATION, LABEL_EDGE, LABEL_DEVIATION, LABEL_FITNESS};
+
+    private static final int[] TEST_IMAGE_CODES = new int[] {86016, 118035, 147091, 176035, 176039, 353013};
+    private static final int IMAGE_CODE = TEST_IMAGE_CODES[2];
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        primaryStage.setTitle("MOEA Image Segmentation");
-        var previewImg = new javafx.scene.image.Image(
-                new FileInputStream("./res/training_images/147091/Test image.jpg"),
-                241, 161, true, false
+
+        long start = System.nanoTime();
+        ProblemImSeg problem = ImSegFiles.ReadImSegProblem("./res/training_images/" + IMAGE_CODE + "/Test image.jpg");
+        System.out.println("Problem reading took: " + (System.nanoTime() - start)/1000000 + "ms");
+        GeneticAlgorithmRunner<ProblemImSeg, PopulationImSeg, ChromoImSeg> gaRunner = new GeneticAlgorithmRunner<>(
+                new Breeder(problem, 5, 25),
+                new SegmentationCrossover(0.7f, 2, problem),
+                new MutatorImSeg(0.3f),
+                new ParentSelectorMOEA(10, 50),
+                new SurvivorSelectorMOEA(),
+                200
         );
-        ImageView imgView = new ImageView(previewImg);
-        ImageView groundTruthImageView = new ImageView(previewImg);
-        Group root = new Group(imgView, groundTruthImageView);
+
+        ImageView[] previewViews = new ImageView[2];
+        WritableImage[] previewImages = new WritableImage[2];
+        Text[] stats = new Text[4];
+        guiComponentSetup(previewViews, previewImages, stats);
+
+        Group root = new Group(new Group(stats), new Group(previewViews));
         Scene scene = new Scene(root, SCREEN_WIDTH, SCREEN_HEIGHT, Color.BLACK);
+
+        primaryStage.setTitle("SimpleGA Image Segmentation");
         primaryStage.setResizable(false);
         primaryStage.setScene(scene);
 
-        var start = System.nanoTime();
-        ProblemImSeg problem = ImSegFiles.ReadImSegProblem("./res/training_images/147091/Test image.jpg");
-        System.out.println("Problem reading took: " + (System.nanoTime() - start)/1000000 + "ms");
-        GeneticAlgorithmRunner<ProblemImSeg, PopulationImSeg, ChromoImSeg> gaRunner = new GeneticAlgorithmRunner<>(
-                new Breeder(problem, 10, 50),
-                new UniformCrossoverer(1.0f),
-                new MutatorImSeg(1.0f),
-                new TournamentSelection(2, 4),
-                new MyPlusLambdaReplacement(problem),
-                60
-        );
+        int[] trainingImageRaw = problem.getImage().rawImage();
+        gaRunner.valueProperty().addListener((obs, oldSnap, newSnap) -> updateOptimaPreviews(previewViews,
+                previewImages, stats, problem, trainingImageRaw, newSnap.optima));
 
-        Image image = problem.getImage();
-        int[] groundTruthImageRaw = new int[image.getPixelCount()];
-        groundTruthImageView.getImage().getPixelReader().getPixels(
-                0, 0, image.getWidth(), image.getHeight(),
-                PixelFormat.getIntArgbPreInstance(), groundTruthImageRaw,
-                0, image.getWidth()
-        );
-
-        gaRunner.valueProperty().addListener( (obs, oldSnap, newSnap) -> {
-            List<Segment> segments = newSnap.optima.get(0).getPhenotype(problem);
-            WritableImage segmentImg = new WritableImage(image.getWidth(), image.getHeight());
-
-            int[] segmentImgRaw = groundTruthImageRaw.clone();
-
-            for (Segment segment : segments) {
-                for (var p : segment.getEdge()) {
-                    segmentImgRaw[p] = 0x0000ff00; // green
-                }
-            }
-
-            segmentImg.getPixelWriter().setPixels(
-                    0, 0, image.getWidth(), image.getHeight(),
-                    PixelFormat.getIntArgbPreInstance(), segmentImgRaw, 0, image.getWidth()
-            );
-            imgView.setImage(segmentImg);
-        });
-
-//        imgView.setOpacity(0.1);
-        imgView.setFitWidth(SCREEN_WIDTH * .5);
-        imgView.setFitHeight(SCREEN_HEIGHT * .5);
-        groundTruthImageView.setFitWidth(SCREEN_WIDTH * .5);
-        groundTruthImageView.setFitHeight(SCREEN_HEIGHT * .5);
-        groundTruthImageView.setX(SCREEN_WIDTH * .5);
         primaryStage.show();
 
         gaRunner.start();
     }
 
-    public static int getRGB(Color col) {
-        int r = ((int) Color.RED.getRed() * 255);
-        int g = ((int) Color.RED.getGreen() * 255);
-        int b = ((int) Color.RED.getBlue() * 255);
-        return (r << 16) + (g << 8) + b;
+    private void guiComponentSetup(ImageView[] previews, WritableImage[] previewImages, Text[] stats) {
+        for (int i = 0; i < 2; i++) {
+            previewImages[i] = new WritableImage(IMAGE_WIDTH, IMAGE_HEIGHT);
+            previews[i] = new ImageView(previewImages[i]);
+
+            previews[i].setFitWidth(IMAGE_WIDTH * IMAGE_SCALING_FACTOR);
+            previews[i].setFitHeight(IMAGE_HEIGHT * IMAGE_SCALING_FACTOR);
+
+            double x = PANEL_WIDTH * (i % HORIZONTAL_PREVIEWS);
+            double y = PANEL_HEIGHT * (i / HORIZONTAL_PREVIEWS);
+            previews[i].setX(x);
+            previews[i].setY(y);
+
+        }
+        for (int i = 0; i < stats.length; i++) {
+            stats[i] = new Text((IMAGE_WIDTH * IMAGE_SCALING_FACTOR) + 32, 32 + 16 * i, LABELS[i]);
+            stats[i].setFill(Color.GREEN);
+            stats[i].setFont(Font.font("Consolas", 12));
+        }
+    }
+
+    private void updateOptimaPreviews(ImageView[] previews, WritableImage[] previewImages, Text[] stats,
+                                      ProblemImSeg problem, int[] trainingImageRaw, List<ChromoImSeg> optima) {
+        ChromoImSeg best = optima.get(0);
+        int[] traced = ImageUtil.traceSegments(trainingImageRaw, best.getPhenotype(problem));
+        ImageUtil.writeImage(previewImages[0], traced);
+
+
+        int[] binaryImage = new int[trainingImageRaw.length];
+        Arrays.fill(binaryImage, 0xffffffff);
+        binaryImage = ImageUtil.traceSegments(binaryImage, best.getPhenotype(problem), 0xff000000);
+        ImageUtil.writeImage(previewImages[1], binaryImage);
+
+        ChromoImSeg.Fitness fitness = best.calculateFitnessComponents(problem);
+        stats[0].setText(String.format("%s%.2f", LABEL_DEVIATION, fitness.getDeviation()));
+        stats[1].setText(String.format("%s%.2f", LABEL_EDGE, fitness.getEdge()));
+        stats[2].setText(String.format("%s%.2f", LABEL_CONNECTIVITY, fitness.getConnectivity()));
+        stats[3].setText(String.format("%s%.2f", LABEL_FITNESS, best.fitness(problem)));
     }
 
     public static void main(String[] args) {
