@@ -46,7 +46,7 @@ public class KPointCrossover implements Recombinator<ChromoImSeg> {
         int[] points = RandomUtil.random.ints(0, problem.getPixelCount()).limit(k).toArray();
 
         ChromoImSeg.EdgeOut[] genoMum = mum.cloneGenotype();
-        ChromoImSeg.EdgeOut[] genoDad = mum.cloneGenotype();
+        ChromoImSeg.EdgeOut[] genoDad = dad.cloneGenotype();
         ChromoImSeg.EdgeOut[] genoDau = new ChromoImSeg.EdgeOut[genoMum.length];
         ChromoImSeg.EdgeOut[] genoSon = new ChromoImSeg.EdgeOut[genoDad.length];
 
