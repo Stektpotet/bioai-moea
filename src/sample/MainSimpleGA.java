@@ -59,11 +59,11 @@ public class MainSimpleGA extends Application {
         System.out.println("Problem reading took: " + (System.nanoTime() - start)/1000000 + "ms");
         GeneticAlgorithmRunner<ProblemImSeg, PopulationImSeg, ChromoImSeg> gaRunner = new GeneticAlgorithmRunner<>(
                 new Breeder(problem, 5, 25),
-                new SegmentationCrossover(0.7f, 2, problem),
+                new UniformCrossoverer(0.7f),
                 new MutatorImSeg(0.3f),
-                new ParentSelectorMOEA(10, 50),
-                new SurvivorSelectorMOEA(),
-                200
+                new TournamentSelection(10, 10),
+                new MyPlusLambdaReplacement(problem),
+                10
         );
 
         ImageView[] previewViews = new ImageView[2];
