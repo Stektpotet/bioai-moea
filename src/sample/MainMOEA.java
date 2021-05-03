@@ -1,5 +1,6 @@
 package sample;
 
+import collections.Image;
 import ga.GeneticAlgorithmRunner;
 import ga.GeneticAlgorithmSnapshot;
 import ga.nsga2.DiversitySelectorMOEA;
@@ -68,35 +69,50 @@ public class MainMOEA extends Application {
                 new DiversitySelectorMOEA(),
                 200
         );
+        final Image image = problem.getImage();
 
         ImageView[] paretoOptimalPreviews = new ImageView[NUM_PREVIEW_IMAGES * 2];
         WritableImage[] paretoOptimalImgs = new WritableImage[NUM_PREVIEW_IMAGES * 2];
         Text[] paretoOptimalStats = new Text[NUM_PREVIEW_IMAGES * 3];
         guiComponentSetup(paretoOptimalPreviews, paretoOptimalImgs, paretoOptimalStats);
 
-        Text generationCounter = new Text(
-                SCREEN_WIDTH - PANEL_WIDTH,
-                SCREEN_HEIGHT - PANEL_HEIGHT + INFO_WIDTH,
+
+        WritableImage bestEvaluatedImg = new WritableImage(image.getWidth(), image.getHeight());
+        ImageView bestEvaluatedView = new ImageView(bestEvaluatedImg);
+
+        bestEvaluatedView.setFitWidth(IMAGE_WIDTH * IMAGE_SCALING_FACTOR);
+        bestEvaluatedView.setFitHeight(IMAGE_HEIGHT * IMAGE_SCALING_FACTOR);
+        bestEvaluatedView.setX(PANEL_WIDTH * 2);
+        bestEvaluatedView.setY(PANEL_HEIGHT * 1.4);
+
+        final int evalXPosition = PANEL_WIDTH * (HORIZONTAL_PREVIEWS - 1);
+        final int evalYPosition = PANEL_HEIGHT * (VERTICAL_PREVIEWS - 1);
+
+        Text generationCounter = new Text(evalXPosition, evalYPosition + 20,
                 String.format("%s#%05d", LABEL_GENERATION, 0)
         );
         generationCounter.setFill(Color.WHITE);
-        generationCounter.setFont(Font.font("Impact", 30));
+        generationCounter.setFont(Font.font("Consolas", 20));
+
+        Text scoreText = new Text(evalXPosition, evalYPosition + 68, String.format("Score: %.2f%%", 0.0f));
+        scoreText.setFill(Color.WHITE);
+        scoreText.setFont(Font.font("Consolas", 20));
+
         Group dataView = new Group(paretoOptimalStats);
         Group previewView = new Group(paretoOptimalPreviews);
-        Group root = new Group(previewView, dataView, generationCounter);
+        Group root = new Group(previewView, dataView, generationCounter, bestEvaluatedView, scoreText);
         Scene scene = new Scene(root, SCREEN_WIDTH, SCREEN_HEIGHT, Color.BLACK);
 
         primaryStage.setTitle("MOEA Image Segmentation");
         primaryStage.setResizable(false);
         primaryStage.setScene(scene);
 
-        int[] trainingImageRaw = problem.getImage().rawImage();
         gaRunner.valueProperty().addListener((obs, oldSnap, newSnap) -> {
             updateOptimaPreviews(paretoOptimalImgs, paretoOptimalStats, problem, newSnap.optima);
             generationCounter.setText(String.format("%s#%05d", LABEL_GENERATION, newSnap.currentGeneration));
         });
 
-        Button button = makeButton(problem, gaRunner);
+        Button button = makeButton(problem, gaRunner, bestEvaluatedView, bestEvaluatedImg, scoreText);
         root.getChildren().add(button);
 
 
@@ -170,7 +186,7 @@ public class MainMOEA extends Application {
     }
 
     private Button makeButton(ProblemImSeg problem,
-                              GeneticAlgorithmRunner<ProblemImSeg, PopulationImSeg, ChromoImSeg> gaRunner) {
+                              GeneticAlgorithmRunner<ProblemImSeg, PopulationImSeg, ChromoImSeg> gaRunner, ImageView bestEvaluatedView, WritableImage bestEvaluatedImage, Text scoreText) {
         Button button = new Button("Evaluate");
         button.setOnAction(actionEvent -> {
             GeneticAlgorithmSnapshot<ChromoImSeg> snapshot = gaRunner.valueProperty().get();
@@ -181,7 +197,14 @@ public class MainMOEA extends Application {
             ImageUtil.Output output = new ImageUtil.Output(firstFront, problem,
                     PATH_TO_SOLUTION_FOLDER, PATH_TO_GT_FOLDER);
             output.valueProperty().addListener((observableValue, previous, current) -> {
-                // TODO implement listener
+                // current: PRI_Optimum
+                ChromoImSeg bestChromo = current.getChromo();
+                double score = current.getPRI();
+                
+                int[] traced = ImageUtil.traceSegments(problem.getImage().rawImage(), bestChromo.getPhenotype(problem));
+                ImageUtil.writeImage(bestEvaluatedImage, traced);
+//                bestEvaluatedView.setImage(bestEvaluatedImage);
+                scoreText.setText(String.format("Score: %.2f%%", 100 * score));
                 System.out.println("listened");
             });
 
@@ -189,7 +212,7 @@ public class MainMOEA extends Application {
             thread.setDaemon(true);
             thread.start();
         });
-        button.setLayoutY(SCREEN_HEIGHT / 2);
+        button.setLayoutY(SCREEN_HEIGHT / 2 + 26);
         button.setLayoutX(SCREEN_WIDTH / 3 * 2);
         return button;
     }

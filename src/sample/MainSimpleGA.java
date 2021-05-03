@@ -77,7 +77,7 @@ public class MainSimpleGA extends Application {
                 String.format("%s#%05d", LABEL_GENERATION, 0)
         );
         generationCounter.setFill(Color.WHITE);
-        generationCounter.setFont(Font.font("Impact", 30));
+        generationCounter.setFont(Font.font("Consolas", 20));
         Group root = new Group(new Group(stats), new Group(previewViews), generationCounter);
         Scene scene = new Scene(root, SCREEN_WIDTH, SCREEN_HEIGHT, Color.BLACK);
 
@@ -85,7 +85,6 @@ public class MainSimpleGA extends Application {
         primaryStage.setResizable(false);
         primaryStage.setScene(scene);
 
-        int[] trainingImageRaw = problem.getImage().rawImage();
         gaRunner.valueProperty().addListener((obs, oldSnap, newSnap) -> {
             updateOptimaPreviews(previewImages, stats, problem, newSnap.optima);
             generationCounter.setText(String.format("%s#%05d", LABEL_GENERATION, newSnap.currentGeneration));
