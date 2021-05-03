@@ -19,7 +19,7 @@ import javafx.concurrent.Task;
  * the "feedbackStation" object, wrapping this object in a Thread object, then calling start() on that thread.
  * You will need to implement the FeedbackStation interface yourselves.
  */
-public final class Evaluator extends Task<double[]> {         // mad boob
+public final class Evaluator extends Task<double[]> {
     String optFolder;
     String studFolder;
 
