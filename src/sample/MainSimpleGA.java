@@ -1,11 +1,13 @@
 package sample;
 
 import ga.GeneticAlgorithmRunner;
+import ga.GeneticAlgorithmSnapshot;
 import ga.nsga2.ParentSelectorMOEA;
 import ga.nsga2.SurvivorSelectorMOEA;
 import javafx.application.Application;
 import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
@@ -43,13 +45,17 @@ public class MainSimpleGA extends Application {
     private static final String[] LABELS = new String[] {LABEL_DEVIATION, LABEL_EDGE, LABEL_DEVIATION, LABEL_FITNESS};
 
     private static final int[] TEST_IMAGE_CODES = new int[] {86016, 118035, 147091, 176035, 176039, 353013};
-    private static final int IMAGE_CODE = TEST_IMAGE_CODES[2];
+    private static final int IMAGE_CODE = TEST_IMAGE_CODES[0];
+    private static final String PATH_TO_SOLUTION_FOLDER = "./sol/simple/" + IMAGE_CODE + "/";
+    private static final String PATH_TO_GT_FOLDER = "./res/training_images/" + IMAGE_CODE + "/blackWhite/";
+    private static final String PATH_TO_PROBLEM = "./res/training_images/" + IMAGE_CODE + "/Test image.jpg";
+
 
     @Override
     public void start(Stage primaryStage) throws Exception {
 
         long start = System.nanoTime();
-        ProblemImSeg problem = ImSegFiles.ReadImSegProblem("./res/training_images/" + IMAGE_CODE + "/Test image.jpg");
+        ProblemImSeg problem = ImSegFiles.ReadImSegProblem(PATH_TO_PROBLEM);
         System.out.println("Problem reading took: " + (System.nanoTime() - start)/1000000 + "ms");
         GeneticAlgorithmRunner<ProblemImSeg, PopulationImSeg, ChromoImSeg> gaRunner = new GeneticAlgorithmRunner<>(
                 new Breeder(problem, 5, 25),
@@ -84,6 +90,9 @@ public class MainSimpleGA extends Application {
             updateOptimaPreviews(previewImages, stats, problem, newSnap.optima);
             generationCounter.setText(String.format("%s#%05d", LABEL_GENERATION, newSnap.currentGeneration));
         });
+
+        Button button = makeButton(problem, gaRunner);
+        root.getChildren().add(button);
 
         primaryStage.show();
 
@@ -129,6 +138,31 @@ public class MainSimpleGA extends Application {
         stats[1].setText(String.format("%s%.2f", LABEL_EDGE, fitness.getEdge()));
         stats[2].setText(String.format("%s%.2f", LABEL_CONNECTIVITY, fitness.getConnectivity()));
         stats[3].setText(String.format("%s%.2f", LABEL_FITNESS, best.fitness(problem)));
+    }
+
+    private Button makeButton(ProblemImSeg problem,
+                              GeneticAlgorithmRunner<ProblemImSeg, PopulationImSeg, ChromoImSeg> gaRunner) {
+        Button button = new Button("Evaluate");
+        button.setOnAction(actionEvent -> {
+            GeneticAlgorithmSnapshot<ChromoImSeg> snapshot = gaRunner.valueProperty().get();
+            List<ChromoImSeg> firstFront = snapshot.optima.subList(0, 1);
+
+            ImageUtil.deleteRecursively(PATH_TO_SOLUTION_FOLDER);
+
+            ImageUtil.Output output = new ImageUtil.Output(firstFront, problem,
+                    PATH_TO_SOLUTION_FOLDER, PATH_TO_GT_FOLDER);
+            output.valueProperty().addListener((observableValue, previous, current) -> {
+                // TODO implement listener
+                System.out.println("listened");
+            });
+
+            Thread thread = new Thread(output);
+            thread.setDaemon(true);
+            thread.start();
+        });
+        button.setLayoutY(IMAGE_HEIGHT * IMAGE_SCALING_FACTOR);
+        button.setLayoutX(IMAGE_WIDTH * IMAGE_SCALING_FACTOR);
+        return button;
     }
 
     public static void main(String[] args) {
