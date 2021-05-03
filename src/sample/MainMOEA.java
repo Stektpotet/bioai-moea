@@ -18,10 +18,7 @@ import javafx.stage.Stage;
 import moea.ChromoImSeg;
 import moea.ImSegFiles;
 import moea.ProblemImSeg;
-import moea.ga.Breeder;
-import moea.ga.KPointCrossover;
-import moea.ga.MutatorImSeg;
-import moea.ga.PopulationImSeg;
+import moea.ga.*;
 
 import java.util.*;
 
@@ -62,8 +59,8 @@ public class MainMOEA extends Application {
         System.out.println("Problem reading took: " + (System.nanoTime() - start)/1000000 + "ms");
         GeneticAlgorithmRunner<ProblemImSeg, PopulationImSeg, ChromoImSeg> gaRunner = new GeneticAlgorithmRunner<>(
                 new Breeder(problem, 1, 10),
-                new KPointCrossover(0.5f, 2, problem),
-                new MutatorImSeg(0.5f),
+                new SegmentationCrossover(0.7f, 2, problem),
+                new MutatorImSeg(0.3f),
                 new ParentSelectorMOEA(50, 50),
                 new DiversitySelectorMOEA(),
                 200
